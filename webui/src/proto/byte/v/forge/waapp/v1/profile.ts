@@ -87,6 +87,16 @@ export interface ListWAAccountsResponse {
   next_cursor: string;
 }
 
+export interface DeleteWAAccountRequest {
+  context: RequestContext | undefined;
+  wa_account_id: string;
+}
+
+export interface DeleteWAAccountResponse {
+  success: boolean;
+  error: WaError | undefined;
+}
+
 export interface PrepareClientProfileRequest {
   context: RequestContext | undefined;
   wa_account_id: string;

@@ -18,6 +18,7 @@ type Store interface {
 	GetWAAccount(context.Context, string, string) (*waappv1.WAAccount, error)
 	FindWAAccountByPhone(context.Context, string, string) (*waappv1.WAAccount, error)
 	ListWAAccounts(context.Context, string, string, int) ([]*waappv1.WAAccount, string, error)
+	DeleteWAAccount(context.Context, string, string) error
 	SaveClientProfile(context.Context, *waappv1.ClientProfile, string) error
 	GetClientProfile(context.Context, string, string) (*waappv1.ClientProfile, error)
 	SaveNativeState(context.Context, string, string, nativeState) error

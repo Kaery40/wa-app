@@ -1,7 +1,7 @@
 import { ACCOUNT_PAGE_SIZE, api, fetchAccountList } from '@byte-v-forge/common-ui';
 import type { ListAccountOtpMessagesResponse } from '../proto/byte/v/forge/waapp/v1/extraction';
 import type { GetLongConnectionStatusResponse, LongConnectionState } from '../proto/byte/v/forge/waapp/v1/messaging';
-import type { CreateWAAccountResponse, ListWAAccountsResponse, WAAccount } from '../proto/byte/v/forge/waapp/v1/profile';
+import type { CreateWAAccountResponse, DeleteWAAccountResponse, ListWAAccountsResponse, WAAccount } from '../proto/byte/v/forge/waapp/v1/profile';
 
 export type WaPhoneInput = {
   workspace_id: string;
@@ -79,6 +79,15 @@ export async function createWaAccount(input: { phone: string; country_calling_co
   if (resp.error?.message) throw new Error(resp.error.message);
   if (!resp.account) throw new Error('WAAccount response is empty');
   return resp.account;
+}
+
+export async function deleteWaAccount(account: WAAccount | string, workspaceId = 'default') {
+  const accountID = typeof account === 'string' ? account : account.account?.key?.account_id || '';
+  if (!accountID) throw new Error('wa_account_id is required');
+  const params = new URLSearchParams({ workspace_id: workspaceId || 'default' });
+  const resp = await api<DeleteWAAccountResponse>(`/api/wa/accounts/${encodeURIComponent(accountID)}?${params.toString()}`, { method: 'DELETE' });
+  if (!resp.success || resp.error?.message) throw new Error(resp.error?.message || 'delete WAAccount failed');
+  return resp;
 }
 
 export function probeWaPhoneSMS(input: WaPhoneInput) {

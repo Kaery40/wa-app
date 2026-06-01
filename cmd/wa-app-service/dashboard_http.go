@@ -54,6 +54,7 @@ func runDashboardHTTP(ctx context.Context, listenAddr, staticDir, n8nWebhookBase
 	mux.HandleFunc("/api/wa/register", server.handleRegister)
 	mux.HandleFunc("/api/wa/login-state-check", server.handleLoginStateCheck)
 	mux.HandleFunc("/api/wa/accounts", server.handleAccounts)
+	mux.HandleFunc("/api/wa/accounts/", server.handleAccount)
 	mux.HandleFunc("/api/wa/account-otp-messages", server.handleAccountOTPMessages)
 	mux.HandleFunc("/api/wa/long-connections", server.handleLongConnections)
 	mux.Handle("/api/wa/actions/", server.actionHandler)
@@ -121,6 +122,37 @@ func (s *dashboardHTTP) handleAccounts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeProtoJSON(w, http.StatusOK, resp)
+}
+
+func (s *dashboardHTTP) handleAccount(w http.ResponseWriter, r *http.Request) {
+	if s.service == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "wa-app service is not configured"})
+		return
+	}
+	accountID, err := url.PathUnescape(strings.Trim(strings.TrimPrefix(r.URL.Path, "/api/wa/accounts/"), "/"))
+	if err != nil || accountID == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "wa_account_id is required"})
+		return
+	}
+	workspaceID := firstNonEmpty(r.URL.Query().Get("workspace_id"), "default")
+	switch r.Method {
+	case http.MethodGet:
+		resp, err := s.service.GetWAAccount(r.Context(), &waappv1.GetWAAccountRequest{Context: &waappv1.RequestContext{WorkspaceId: workspaceID, RequestId: newRequestID("wa-account-get")}, WaAccountId: accountID})
+		if err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "load WA account failed"})
+			return
+		}
+		writeProtoJSON(w, http.StatusOK, resp)
+	case http.MethodDelete:
+		resp, err := s.service.DeleteWAAccount(r.Context(), &waappv1.DeleteWAAccountRequest{Context: &waappv1.RequestContext{WorkspaceId: workspaceID, RequestId: newRequestID("wa-account-delete")}, WaAccountId: accountID})
+		if err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "delete WA account failed"})
+			return
+		}
+		writeProtoJSON(w, http.StatusOK, resp)
+	default:
+		methodNotAllowed(w, http.MethodGet+", "+http.MethodDelete)
+	}
 }
 
 func (s *dashboardHTTP) handleCreateAccount(w http.ResponseWriter, r *http.Request) {
@@ -636,7 +668,7 @@ func withCORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-		w.Header().Set("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
+		w.Header().Set("Access-Control-Allow-Methods", "GET,POST,DELETE,OPTIONS")
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
 			return

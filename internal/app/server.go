@@ -159,6 +159,24 @@ func (s *Server) ListWAAccounts(ctx context.Context, req *waappv1.ListWAAccounts
 	return &waappv1.ListWAAccountsResponse{Accounts: accounts, NextCursor: nextCursor}, nil
 }
 
+func (s *Server) DeleteWAAccount(ctx context.Context, req *waappv1.DeleteWAAccountRequest) (*waappv1.DeleteWAAccountResponse, error) {
+	if err := validateContext(req.GetContext()); err != nil {
+		return &waappv1.DeleteWAAccountResponse{Error: ToProtoError(err)}, nil
+	}
+	accountID, err := requireWAAccountID(req.GetWaAccountId())
+	if err != nil {
+		return &waappv1.DeleteWAAccountResponse{Error: ToProtoError(err)}, nil
+	}
+	found, err := s.waAccounts(req.GetContext().GetWorkspaceId()).Delete(ctx, accountID)
+	if err != nil {
+		return &waappv1.DeleteWAAccountResponse{Error: ToProtoError(err)}, nil
+	}
+	if !found {
+		return &waappv1.DeleteWAAccountResponse{Error: ToProtoError(NewError(waappv1.WaErrorCode_WA_ERROR_CODE_WA_ACCOUNT_NOT_FOUND, "WA account not found", false))}, nil
+	}
+	return &waappv1.DeleteWAAccountResponse{Success: true}, nil
+}
+
 func (s *Server) PrepareClientProfile(ctx context.Context, req *waappv1.PrepareClientProfileRequest) (*waappv1.PrepareClientProfileResponse, error) {
 	if err := validateContext(req.GetContext()); err != nil {
 		return &waappv1.PrepareClientProfileResponse{Error: ToProtoError(err)}, nil

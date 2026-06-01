@@ -1,5 +1,5 @@
 import { Copy, Play, Search, Send, Smartphone } from 'lucide-react';
-import { AccountActionRow, AccountActionRows, AccountDetails, Badge, Button, OneTimeOTPSubmit, accountId, accountStatusValue, accountSubject, buttonHint, copyText, useQuery, type AccountManagementDetailTab, type AccountRecord, type ActionButtonDescriptor } from '@byte-v-forge/common-ui';
+import { AccountActionRow, AccountActionRows, AccountDangerZone, AccountDetails, Badge, Button, OneTimeOTPSubmit, accountId, accountStatusValue, accountSubject, buttonHint, copyText, useQuery, type AccountManagementDetailTab, type AccountRecord, type ActionButtonDescriptor } from '@byte-v-forge/common-ui';
 import { WaOtpSource } from '@byte-v-forge/common-ui/proto/byte/v/forge/contracts/wa/v1/wa';
 import type { OtpMessage } from '../proto/byte/v/forge/waapp/v1/extraction';
 import type { WaAccountProjection, WaWorkflowResponse } from './wa-api';
@@ -20,6 +20,7 @@ export function waAccountDetailTabs(options: {
   busy: boolean;
   onRegister: (account: WaAccountProjection) => void | Promise<void>;
   onProbe: (account: WaAccountProjection) => void | Promise<void>;
+  onDelete: (account: WaAccountProjection) => void | Promise<void>;
   onManualOTPDone: (message: string) => void;
   onError: (message: string) => void;
 }) {
@@ -27,20 +28,20 @@ export function waAccountDetailTabs(options: {
     {
       value: 'details',
       label: '账户详情',
-      content: <WaAccountOverview carrier={carrier} account={account} actionResult={options.actionResult} busy={options.busy} onRegister={options.onRegister} onProbe={options.onProbe} onManualOTPDone={options.onManualOTPDone} onError={options.onError} />,
-      contentClassName: 'accountDetailTabContent',
+      content: <WaAccountOverview carrier={carrier} account={account} actionResult={options.actionResult} busy={options.busy} onRegister={options.onRegister} onProbe={options.onProbe} onDelete={options.onDelete} onManualOTPDone={options.onManualOTPDone} onError={options.onError} />,
     },
-    { value: 'otp', label: 'OTP 历史', content: <WaOtpHistory account={account} />, contentClassName: 'accountDetailTabContent' },
+    { value: 'otp', label: 'OTP 历史', content: <WaOtpHistory account={account} /> },
   ];
 }
 
-function WaAccountOverview({ carrier, account, actionResult, busy, onRegister, onProbe }: {
+function WaAccountOverview({ carrier, account, actionResult, busy, onRegister, onProbe, onDelete, onManualOTPDone, onError }: {
   carrier: WaAccountProjection;
   account: AccountRecord;
   actionResult: WaAccountActionResult | null;
   busy: boolean;
   onRegister: (account: WaAccountProjection) => void | Promise<void>;
   onProbe: (account: WaAccountProjection) => void | Promise<void>;
+  onDelete: (account: WaAccountProjection) => void | Promise<void>;
   onManualOTPDone: (message: string) => void;
   onError: (message: string) => void;
 }) {
@@ -53,6 +54,9 @@ function WaAccountOverview({ carrier, account, actionResult, busy, onRegister, o
         {currentResult && <WaResultPanel title={currentResult.kind === 'register' ? '注册结果' : '探测结果'} phone={currentResult.phone} result={currentResult.result} loading={busy} />}
       </div>
       <AccountDetails account={account} config={{ icon: () => <Smartphone size={15} />, title: (record) => <span className="font-mono">{accountSubject(record) || record.key?.account_id}</span> }} />
+      <div className="px-4 pb-4">
+        <AccountDangerZone account={carrier} busy={busy} onDelete={onDelete} />
+      </div>
     </div>
   );
 }

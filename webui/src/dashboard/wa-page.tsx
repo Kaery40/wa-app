@@ -1,8 +1,8 @@
 import { useState, type ReactNode } from 'react';
 import { RefreshCw, Smartphone, Workflow } from 'lucide-react';
-import { ACCOUNT_PAGE_SIZE, AccountManagementDrawerView, Alert, AlertDescription, AlertTitle, Badge, Button, Card, CardContent, ToastMessage, WorkspaceTabbedPanel, accountId, accountSubject, useAccountPages, useAsyncActionRunner, useQuery, useToastMessage, type AccountListPagination, type AccountRecord } from '@byte-v-forge/common-ui';
+import { ACCOUNT_PAGE_SIZE, AccountManagementDrawerView, Alert, AlertDescription, AlertTitle, Badge, Button, Card, CardContent, ToastMessage, WorkspaceTabbedPanel, accountId, accountSubject, deleteAccountCarrier, useAccountPages, useAsyncActionRunner, useQuery, useToastMessage, type AccountListPagination, type AccountRecord } from '@byte-v-forge/common-ui';
 import type { ListWAAccountsResponse } from '../proto/byte/v/forge/waapp/v1/profile';
-import { getWaAccounts, getWaHealth, probeWaAccount, probeWaPhoneSMS, registerWaAccount, waKeys, type WaAccountProjection, type WaWorkflowResponse } from './wa-api';
+import { deleteWaAccount, getWaAccounts, getWaHealth, probeWaAccount, probeWaPhoneSMS, registerWaAccount, waKeys, type WaAccountProjection, type WaWorkflowResponse } from './wa-api';
 import { WaAccountAdd } from './wa-account-add';
 import { waAccountDetailTabs, type WaAccountActionResult } from './wa-account-detail';
 import { WaPhoneSMSProbeForm } from './wa-phone-sms-probe-form';
@@ -54,7 +54,21 @@ function WaAccountsTab(props: { accounts: WaAccountProjection[]; loading?: boole
   const runner = useAsyncActionRunner();
   const selectedAccount = selected?.account || null;
   const renderConfig = { icon: () => <Smartphone size={15} />, title: (record: AccountRecord) => <span className="font-mono">{accountSubject(record) || record.key?.account_id}</span>, subtitle: (record: AccountRecord) => record.key?.account_id || '', meta: (record: AccountRecord) => <span className="text-xs text-muted-foreground">{record.status?.label || record.status?.value || '-'}</span> };
-  return <AccountManagementDrawerView title="WAAccount" icon={<Smartphone size={16} />} actions={<WaAccountAdd disabled={props.loading} onCreated={props.onAccountAdded} onError={props.onError} />} carriers={props.accounts} selectedCarrier={selected} selectedID={selectedAccount ? accountId(selectedAccount) : undefined} onSelectCarrier={setSelected} loading={props.loading} loadingText="加载 WAAccount..." emptyText="暂无已持久化 WAAccount" pagination={props.pagination} config={renderConfig} drawerDescription="WA 账号详情" detailTabs={waAccountDetailTabs({ actionResult, busy: runner.busy, onRegister: (account) => runWAAccountAction('register', account, runner, setActionResult, props), onProbe: (account) => runWAAccountAction('probe', account, runner, setActionResult, props), onManualOTPDone: props.onActionDone, onError: props.onError })} onCloseDetails={() => setSelected(null)} />;
+  async function deleteAccount(account: WaAccountProjection) {
+    const accountID = account.account?.key?.account_id || '';
+    await runner.tryRun(`wa-delete:${accountID}`, async () => {
+      const deleted = await deleteAccountCarrier(account, {
+        deleteByID: () => deleteWaAccount(account, ACCOUNT_WORKSPACE_ID),
+        confirmMessage: () => `删除 WAAccount ${accountID}？`,
+        invalidate: async () => {
+          setSelected(null);
+          await props.onAccountsChanged();
+        },
+      });
+      if (deleted) props.onActionDone('WAAccount 已删除');
+    }, { onError: props.onError });
+  }
+  return <AccountManagementDrawerView title="WAAccount" icon={<Smartphone size={16} />} actions={<WaAccountAdd disabled={props.loading} onCreated={props.onAccountAdded} onError={props.onError} />} carriers={props.accounts} selectedCarrier={selected} selectedID={selectedAccount ? accountId(selectedAccount) : undefined} onSelectCarrier={setSelected} loading={props.loading} loadingText="加载 WAAccount..." emptyText="暂无已持久化 WAAccount" pagination={props.pagination} config={renderConfig} drawerDescription="WA 账号详情" detailTabs={waAccountDetailTabs({ actionResult, busy: runner.busy, onRegister: (account) => runWAAccountAction('register', account, runner, setActionResult, props), onProbe: (account) => runWAAccountAction('probe', account, runner, setActionResult, props), onDelete: deleteAccount, onManualOTPDone: props.onActionDone, onError: props.onError })} onCloseDetails={() => setSelected(null)} />;
 }
 
 type WaAccountActionKind = WaAccountActionResult['kind'];

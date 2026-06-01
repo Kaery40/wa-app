@@ -684,6 +684,110 @@ func (x *ListWAAccountsResponse) GetNextCursor() string {
 	return ""
 }
 
+type DeleteWAAccountRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Context       *RequestContext        `protobuf:"bytes,1,opt,name=context,proto3" json:"context,omitempty"`
+	WaAccountId   string                 `protobuf:"bytes,2,opt,name=wa_account_id,json=waAccountId,proto3" json:"wa_account_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteWAAccountRequest) Reset() {
+	*x = DeleteWAAccountRequest{}
+	mi := &file_byte_v_forge_waapp_v1_profile_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteWAAccountRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteWAAccountRequest) ProtoMessage() {}
+
+func (x *DeleteWAAccountRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_byte_v_forge_waapp_v1_profile_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteWAAccountRequest.ProtoReflect.Descriptor instead.
+func (*DeleteWAAccountRequest) Descriptor() ([]byte, []int) {
+	return file_byte_v_forge_waapp_v1_profile_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *DeleteWAAccountRequest) GetContext() *RequestContext {
+	if x != nil {
+		return x.Context
+	}
+	return nil
+}
+
+func (x *DeleteWAAccountRequest) GetWaAccountId() string {
+	if x != nil {
+		return x.WaAccountId
+	}
+	return ""
+}
+
+type DeleteWAAccountResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	Error         *WaError               `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteWAAccountResponse) Reset() {
+	*x = DeleteWAAccountResponse{}
+	mi := &file_byte_v_forge_waapp_v1_profile_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteWAAccountResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteWAAccountResponse) ProtoMessage() {}
+
+func (x *DeleteWAAccountResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_byte_v_forge_waapp_v1_profile_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteWAAccountResponse.ProtoReflect.Descriptor instead.
+func (*DeleteWAAccountResponse) Descriptor() ([]byte, []int) {
+	return file_byte_v_forge_waapp_v1_profile_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *DeleteWAAccountResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *DeleteWAAccountResponse) GetError() *WaError {
+	if x != nil {
+		return x.Error
+	}
+	return nil
+}
+
 type PrepareClientProfileRequest struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
 	Context           *RequestContext        `protobuf:"bytes,1,opt,name=context,proto3" json:"context,omitempty"`
@@ -695,7 +799,7 @@ type PrepareClientProfileRequest struct {
 
 func (x *PrepareClientProfileRequest) Reset() {
 	*x = PrepareClientProfileRequest{}
-	mi := &file_byte_v_forge_waapp_v1_profile_proto_msgTypes[8]
+	mi := &file_byte_v_forge_waapp_v1_profile_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -707,7 +811,7 @@ func (x *PrepareClientProfileRequest) String() string {
 func (*PrepareClientProfileRequest) ProtoMessage() {}
 
 func (x *PrepareClientProfileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_byte_v_forge_waapp_v1_profile_proto_msgTypes[8]
+	mi := &file_byte_v_forge_waapp_v1_profile_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -720,7 +824,7 @@ func (x *PrepareClientProfileRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PrepareClientProfileRequest.ProtoReflect.Descriptor instead.
 func (*PrepareClientProfileRequest) Descriptor() ([]byte, []int) {
-	return file_byte_v_forge_waapp_v1_profile_proto_rawDescGZIP(), []int{8}
+	return file_byte_v_forge_waapp_v1_profile_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *PrepareClientProfileRequest) GetContext() *RequestContext {
@@ -754,7 +858,7 @@ type PrepareClientProfileResponse struct {
 
 func (x *PrepareClientProfileResponse) Reset() {
 	*x = PrepareClientProfileResponse{}
-	mi := &file_byte_v_forge_waapp_v1_profile_proto_msgTypes[9]
+	mi := &file_byte_v_forge_waapp_v1_profile_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -766,7 +870,7 @@ func (x *PrepareClientProfileResponse) String() string {
 func (*PrepareClientProfileResponse) ProtoMessage() {}
 
 func (x *PrepareClientProfileResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_byte_v_forge_waapp_v1_profile_proto_msgTypes[9]
+	mi := &file_byte_v_forge_waapp_v1_profile_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -779,7 +883,7 @@ func (x *PrepareClientProfileResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PrepareClientProfileResponse.ProtoReflect.Descriptor instead.
 func (*PrepareClientProfileResponse) Descriptor() ([]byte, []int) {
-	return file_byte_v_forge_waapp_v1_profile_proto_rawDescGZIP(), []int{9}
+	return file_byte_v_forge_waapp_v1_profile_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *PrepareClientProfileResponse) GetClientProfile() *ClientProfile {
@@ -806,7 +910,7 @@ type GetClientProfileRequest struct {
 
 func (x *GetClientProfileRequest) Reset() {
 	*x = GetClientProfileRequest{}
-	mi := &file_byte_v_forge_waapp_v1_profile_proto_msgTypes[10]
+	mi := &file_byte_v_forge_waapp_v1_profile_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -818,7 +922,7 @@ func (x *GetClientProfileRequest) String() string {
 func (*GetClientProfileRequest) ProtoMessage() {}
 
 func (x *GetClientProfileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_byte_v_forge_waapp_v1_profile_proto_msgTypes[10]
+	mi := &file_byte_v_forge_waapp_v1_profile_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -831,7 +935,7 @@ func (x *GetClientProfileRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetClientProfileRequest.ProtoReflect.Descriptor instead.
 func (*GetClientProfileRequest) Descriptor() ([]byte, []int) {
-	return file_byte_v_forge_waapp_v1_profile_proto_rawDescGZIP(), []int{10}
+	return file_byte_v_forge_waapp_v1_profile_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *GetClientProfileRequest) GetContext() *RequestContext {
@@ -858,7 +962,7 @@ type GetClientProfileResponse struct {
 
 func (x *GetClientProfileResponse) Reset() {
 	*x = GetClientProfileResponse{}
-	mi := &file_byte_v_forge_waapp_v1_profile_proto_msgTypes[11]
+	mi := &file_byte_v_forge_waapp_v1_profile_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -870,7 +974,7 @@ func (x *GetClientProfileResponse) String() string {
 func (*GetClientProfileResponse) ProtoMessage() {}
 
 func (x *GetClientProfileResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_byte_v_forge_waapp_v1_profile_proto_msgTypes[11]
+	mi := &file_byte_v_forge_waapp_v1_profile_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -883,7 +987,7 @@ func (x *GetClientProfileResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetClientProfileResponse.ProtoReflect.Descriptor instead.
 func (*GetClientProfileResponse) Descriptor() ([]byte, []int) {
-	return file_byte_v_forge_waapp_v1_profile_proto_rawDescGZIP(), []int{11}
+	return file_byte_v_forge_waapp_v1_profile_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *GetClientProfileResponse) GetClientProfile() *ClientProfile {
@@ -911,7 +1015,7 @@ type RetireClientProfileRequest struct {
 
 func (x *RetireClientProfileRequest) Reset() {
 	*x = RetireClientProfileRequest{}
-	mi := &file_byte_v_forge_waapp_v1_profile_proto_msgTypes[12]
+	mi := &file_byte_v_forge_waapp_v1_profile_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -923,7 +1027,7 @@ func (x *RetireClientProfileRequest) String() string {
 func (*RetireClientProfileRequest) ProtoMessage() {}
 
 func (x *RetireClientProfileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_byte_v_forge_waapp_v1_profile_proto_msgTypes[12]
+	mi := &file_byte_v_forge_waapp_v1_profile_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -936,7 +1040,7 @@ func (x *RetireClientProfileRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RetireClientProfileRequest.ProtoReflect.Descriptor instead.
 func (*RetireClientProfileRequest) Descriptor() ([]byte, []int) {
-	return file_byte_v_forge_waapp_v1_profile_proto_rawDescGZIP(), []int{12}
+	return file_byte_v_forge_waapp_v1_profile_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *RetireClientProfileRequest) GetContext() *RequestContext {
@@ -970,7 +1074,7 @@ type RetireClientProfileResponse struct {
 
 func (x *RetireClientProfileResponse) Reset() {
 	*x = RetireClientProfileResponse{}
-	mi := &file_byte_v_forge_waapp_v1_profile_proto_msgTypes[13]
+	mi := &file_byte_v_forge_waapp_v1_profile_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -982,7 +1086,7 @@ func (x *RetireClientProfileResponse) String() string {
 func (*RetireClientProfileResponse) ProtoMessage() {}
 
 func (x *RetireClientProfileResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_byte_v_forge_waapp_v1_profile_proto_msgTypes[13]
+	mi := &file_byte_v_forge_waapp_v1_profile_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -995,7 +1099,7 @@ func (x *RetireClientProfileResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RetireClientProfileResponse.ProtoReflect.Descriptor instead.
 func (*RetireClientProfileResponse) Descriptor() ([]byte, []int) {
-	return file_byte_v_forge_waapp_v1_profile_proto_rawDescGZIP(), []int{13}
+	return file_byte_v_forge_waapp_v1_profile_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *RetireClientProfileResponse) GetClientProfile() *ClientProfile {
@@ -1053,7 +1157,13 @@ const file_byte_v_forge_waapp_v1_profile_proto_rawDesc = "" +
 	"\baccounts\x18\x01 \x03(\v2 .byte.v.forge.waapp.v1.WAAccountR\baccounts\x124\n" +
 	"\x05error\x18\x02 \x01(\v2\x1e.byte.v.forge.waapp.v1.WaErrorR\x05error\x12\x1f\n" +
 	"\vnext_cursor\x18\x03 \x01(\tR\n" +
-	"nextCursor\"\xb2\x01\n" +
+	"nextCursor\"}\n" +
+	"\x16DeleteWAAccountRequest\x12?\n" +
+	"\acontext\x18\x01 \x01(\v2%.byte.v.forge.waapp.v1.RequestContextR\acontext\x12\"\n" +
+	"\rwa_account_id\x18\x02 \x01(\tR\vwaAccountId\"i\n" +
+	"\x17DeleteWAAccountResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x124\n" +
+	"\x05error\x18\x02 \x01(\v2\x1e.byte.v.forge.waapp.v1.WaErrorR\x05error\"\xb2\x01\n" +
 	"\x1bPrepareClientProfileRequest\x12?\n" +
 	"\acontext\x18\x01 \x01(\v2%.byte.v.forge.waapp.v1.RequestContextR\acontext\x12\"\n" +
 	"\rwa_account_id\x18\x02 \x01(\tR\vwaAccountId\x12.\n" +
@@ -1091,11 +1201,12 @@ const file_byte_v_forge_waapp_v1_profile_proto_rawDesc = "" +
 	"\x1bKEY_MATERIAL_STATUS_PENDING\x10\x01\x12\x1d\n" +
 	"\x19KEY_MATERIAL_STATUS_READY\x10\x02\x12\x1f\n" +
 	"\x1bKEY_MATERIAL_STATUS_INVALID\x10\x03\x12\x1f\n" +
-	"\x1bKEY_MATERIAL_STATUS_ROTATED\x10\x042\xd0\x05\n" +
+	"\x1bKEY_MATERIAL_STATUS_ROTATED\x10\x042\xc2\x06\n" +
 	"\x10WaProfileService\x12p\n" +
 	"\x0fCreateWAAccount\x12-.byte.v.forge.waapp.v1.CreateWAAccountRequest\x1a..byte.v.forge.waapp.v1.CreateWAAccountResponse\x12g\n" +
 	"\fGetWAAccount\x12*.byte.v.forge.waapp.v1.GetWAAccountRequest\x1a+.byte.v.forge.waapp.v1.GetWAAccountResponse\x12m\n" +
-	"\x0eListWAAccounts\x12,.byte.v.forge.waapp.v1.ListWAAccountsRequest\x1a-.byte.v.forge.waapp.v1.ListWAAccountsResponse\x12\x7f\n" +
+	"\x0eListWAAccounts\x12,.byte.v.forge.waapp.v1.ListWAAccountsRequest\x1a-.byte.v.forge.waapp.v1.ListWAAccountsResponse\x12p\n" +
+	"\x0fDeleteWAAccount\x12-.byte.v.forge.waapp.v1.DeleteWAAccountRequest\x1a..byte.v.forge.waapp.v1.DeleteWAAccountResponse\x12\x7f\n" +
 	"\x14PrepareClientProfile\x122.byte.v.forge.waapp.v1.PrepareClientProfileRequest\x1a3.byte.v.forge.waapp.v1.PrepareClientProfileResponse\x12s\n" +
 	"\x10GetClientProfile\x12..byte.v.forge.waapp.v1.GetClientProfileRequest\x1a/.byte.v.forge.waapp.v1.GetClientProfileResponse\x12|\n" +
 	"\x13RetireClientProfile\x121.byte.v.forge.waapp.v1.RetireClientProfileRequest\x1a2.byte.v.forge.waapp.v1.RetireClientProfileResponseB\x9f\x01\n" +
@@ -1114,7 +1225,7 @@ func file_byte_v_forge_waapp_v1_profile_proto_rawDescGZIP() []byte {
 }
 
 var file_byte_v_forge_waapp_v1_profile_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_byte_v_forge_waapp_v1_profile_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_byte_v_forge_waapp_v1_profile_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_byte_v_forge_waapp_v1_profile_proto_goTypes = []any{
 	(WAAccountStatus)(0),                 // 0: byte.v.forge.waapp.v1.WAAccountStatus
 	(ClientProfileStatus)(0),             // 1: byte.v.forge.waapp.v1.ClientProfileStatus
@@ -1127,64 +1238,70 @@ var file_byte_v_forge_waapp_v1_profile_proto_goTypes = []any{
 	(*GetWAAccountResponse)(nil),         // 8: byte.v.forge.waapp.v1.GetWAAccountResponse
 	(*ListWAAccountsRequest)(nil),        // 9: byte.v.forge.waapp.v1.ListWAAccountsRequest
 	(*ListWAAccountsResponse)(nil),       // 10: byte.v.forge.waapp.v1.ListWAAccountsResponse
-	(*PrepareClientProfileRequest)(nil),  // 11: byte.v.forge.waapp.v1.PrepareClientProfileRequest
-	(*PrepareClientProfileResponse)(nil), // 12: byte.v.forge.waapp.v1.PrepareClientProfileResponse
-	(*GetClientProfileRequest)(nil),      // 13: byte.v.forge.waapp.v1.GetClientProfileRequest
-	(*GetClientProfileResponse)(nil),     // 14: byte.v.forge.waapp.v1.GetClientProfileResponse
-	(*RetireClientProfileRequest)(nil),   // 15: byte.v.forge.waapp.v1.RetireClientProfileRequest
-	(*RetireClientProfileResponse)(nil),  // 16: byte.v.forge.waapp.v1.RetireClientProfileResponse
-	(*v1.Account)(nil),                   // 17: byte.v.forge.contracts.account.v1.Account
-	(*PhoneTarget)(nil),                  // 18: byte.v.forge.waapp.v1.PhoneTarget
-	(*timestamppb.Timestamp)(nil),        // 19: google.protobuf.Timestamp
-	(*AuditStamp)(nil),                   // 20: byte.v.forge.waapp.v1.AuditStamp
-	(*WaError)(nil),                      // 21: byte.v.forge.waapp.v1.WaError
-	(*RequestContext)(nil),               // 22: byte.v.forge.waapp.v1.RequestContext
+	(*DeleteWAAccountRequest)(nil),       // 11: byte.v.forge.waapp.v1.DeleteWAAccountRequest
+	(*DeleteWAAccountResponse)(nil),      // 12: byte.v.forge.waapp.v1.DeleteWAAccountResponse
+	(*PrepareClientProfileRequest)(nil),  // 13: byte.v.forge.waapp.v1.PrepareClientProfileRequest
+	(*PrepareClientProfileResponse)(nil), // 14: byte.v.forge.waapp.v1.PrepareClientProfileResponse
+	(*GetClientProfileRequest)(nil),      // 15: byte.v.forge.waapp.v1.GetClientProfileRequest
+	(*GetClientProfileResponse)(nil),     // 16: byte.v.forge.waapp.v1.GetClientProfileResponse
+	(*RetireClientProfileRequest)(nil),   // 17: byte.v.forge.waapp.v1.RetireClientProfileRequest
+	(*RetireClientProfileResponse)(nil),  // 18: byte.v.forge.waapp.v1.RetireClientProfileResponse
+	(*v1.Account)(nil),                   // 19: byte.v.forge.contracts.account.v1.Account
+	(*PhoneTarget)(nil),                  // 20: byte.v.forge.waapp.v1.PhoneTarget
+	(*timestamppb.Timestamp)(nil),        // 21: google.protobuf.Timestamp
+	(*AuditStamp)(nil),                   // 22: byte.v.forge.waapp.v1.AuditStamp
+	(*WaError)(nil),                      // 23: byte.v.forge.waapp.v1.WaError
+	(*RequestContext)(nil),               // 24: byte.v.forge.waapp.v1.RequestContext
 }
 var file_byte_v_forge_waapp_v1_profile_proto_depIdxs = []int32{
-	17, // 0: byte.v.forge.waapp.v1.WAAccount.account:type_name -> byte.v.forge.contracts.account.v1.Account
-	18, // 1: byte.v.forge.waapp.v1.WAAccount.phone:type_name -> byte.v.forge.waapp.v1.PhoneTarget
+	19, // 0: byte.v.forge.waapp.v1.WAAccount.account:type_name -> byte.v.forge.contracts.account.v1.Account
+	20, // 1: byte.v.forge.waapp.v1.WAAccount.phone:type_name -> byte.v.forge.waapp.v1.PhoneTarget
 	1,  // 2: byte.v.forge.waapp.v1.ClientProfile.status:type_name -> byte.v.forge.waapp.v1.ClientProfileStatus
 	2,  // 3: byte.v.forge.waapp.v1.ClientProfile.registration_key_state:type_name -> byte.v.forge.waapp.v1.KeyMaterialStatus
 	2,  // 4: byte.v.forge.waapp.v1.ClientProfile.messaging_key_state:type_name -> byte.v.forge.waapp.v1.KeyMaterialStatus
-	19, // 5: byte.v.forge.waapp.v1.ClientProfile.last_used_at:type_name -> google.protobuf.Timestamp
-	20, // 6: byte.v.forge.waapp.v1.ClientProfile.audit:type_name -> byte.v.forge.waapp.v1.AuditStamp
-	21, // 7: byte.v.forge.waapp.v1.ClientProfile.last_error:type_name -> byte.v.forge.waapp.v1.WaError
-	22, // 8: byte.v.forge.waapp.v1.CreateWAAccountRequest.context:type_name -> byte.v.forge.waapp.v1.RequestContext
-	18, // 9: byte.v.forge.waapp.v1.CreateWAAccountRequest.phone:type_name -> byte.v.forge.waapp.v1.PhoneTarget
+	21, // 5: byte.v.forge.waapp.v1.ClientProfile.last_used_at:type_name -> google.protobuf.Timestamp
+	22, // 6: byte.v.forge.waapp.v1.ClientProfile.audit:type_name -> byte.v.forge.waapp.v1.AuditStamp
+	23, // 7: byte.v.forge.waapp.v1.ClientProfile.last_error:type_name -> byte.v.forge.waapp.v1.WaError
+	24, // 8: byte.v.forge.waapp.v1.CreateWAAccountRequest.context:type_name -> byte.v.forge.waapp.v1.RequestContext
+	20, // 9: byte.v.forge.waapp.v1.CreateWAAccountRequest.phone:type_name -> byte.v.forge.waapp.v1.PhoneTarget
 	3,  // 10: byte.v.forge.waapp.v1.CreateWAAccountResponse.account:type_name -> byte.v.forge.waapp.v1.WAAccount
-	21, // 11: byte.v.forge.waapp.v1.CreateWAAccountResponse.error:type_name -> byte.v.forge.waapp.v1.WaError
-	22, // 12: byte.v.forge.waapp.v1.GetWAAccountRequest.context:type_name -> byte.v.forge.waapp.v1.RequestContext
+	23, // 11: byte.v.forge.waapp.v1.CreateWAAccountResponse.error:type_name -> byte.v.forge.waapp.v1.WaError
+	24, // 12: byte.v.forge.waapp.v1.GetWAAccountRequest.context:type_name -> byte.v.forge.waapp.v1.RequestContext
 	3,  // 13: byte.v.forge.waapp.v1.GetWAAccountResponse.account:type_name -> byte.v.forge.waapp.v1.WAAccount
-	21, // 14: byte.v.forge.waapp.v1.GetWAAccountResponse.error:type_name -> byte.v.forge.waapp.v1.WaError
-	22, // 15: byte.v.forge.waapp.v1.ListWAAccountsRequest.context:type_name -> byte.v.forge.waapp.v1.RequestContext
+	23, // 14: byte.v.forge.waapp.v1.GetWAAccountResponse.error:type_name -> byte.v.forge.waapp.v1.WaError
+	24, // 15: byte.v.forge.waapp.v1.ListWAAccountsRequest.context:type_name -> byte.v.forge.waapp.v1.RequestContext
 	3,  // 16: byte.v.forge.waapp.v1.ListWAAccountsResponse.accounts:type_name -> byte.v.forge.waapp.v1.WAAccount
-	21, // 17: byte.v.forge.waapp.v1.ListWAAccountsResponse.error:type_name -> byte.v.forge.waapp.v1.WaError
-	22, // 18: byte.v.forge.waapp.v1.PrepareClientProfileRequest.context:type_name -> byte.v.forge.waapp.v1.RequestContext
-	4,  // 19: byte.v.forge.waapp.v1.PrepareClientProfileResponse.client_profile:type_name -> byte.v.forge.waapp.v1.ClientProfile
-	21, // 20: byte.v.forge.waapp.v1.PrepareClientProfileResponse.error:type_name -> byte.v.forge.waapp.v1.WaError
-	22, // 21: byte.v.forge.waapp.v1.GetClientProfileRequest.context:type_name -> byte.v.forge.waapp.v1.RequestContext
-	4,  // 22: byte.v.forge.waapp.v1.GetClientProfileResponse.client_profile:type_name -> byte.v.forge.waapp.v1.ClientProfile
-	21, // 23: byte.v.forge.waapp.v1.GetClientProfileResponse.error:type_name -> byte.v.forge.waapp.v1.WaError
-	22, // 24: byte.v.forge.waapp.v1.RetireClientProfileRequest.context:type_name -> byte.v.forge.waapp.v1.RequestContext
-	4,  // 25: byte.v.forge.waapp.v1.RetireClientProfileResponse.client_profile:type_name -> byte.v.forge.waapp.v1.ClientProfile
-	21, // 26: byte.v.forge.waapp.v1.RetireClientProfileResponse.error:type_name -> byte.v.forge.waapp.v1.WaError
-	5,  // 27: byte.v.forge.waapp.v1.WaProfileService.CreateWAAccount:input_type -> byte.v.forge.waapp.v1.CreateWAAccountRequest
-	7,  // 28: byte.v.forge.waapp.v1.WaProfileService.GetWAAccount:input_type -> byte.v.forge.waapp.v1.GetWAAccountRequest
-	9,  // 29: byte.v.forge.waapp.v1.WaProfileService.ListWAAccounts:input_type -> byte.v.forge.waapp.v1.ListWAAccountsRequest
-	11, // 30: byte.v.forge.waapp.v1.WaProfileService.PrepareClientProfile:input_type -> byte.v.forge.waapp.v1.PrepareClientProfileRequest
-	13, // 31: byte.v.forge.waapp.v1.WaProfileService.GetClientProfile:input_type -> byte.v.forge.waapp.v1.GetClientProfileRequest
-	15, // 32: byte.v.forge.waapp.v1.WaProfileService.RetireClientProfile:input_type -> byte.v.forge.waapp.v1.RetireClientProfileRequest
-	6,  // 33: byte.v.forge.waapp.v1.WaProfileService.CreateWAAccount:output_type -> byte.v.forge.waapp.v1.CreateWAAccountResponse
-	8,  // 34: byte.v.forge.waapp.v1.WaProfileService.GetWAAccount:output_type -> byte.v.forge.waapp.v1.GetWAAccountResponse
-	10, // 35: byte.v.forge.waapp.v1.WaProfileService.ListWAAccounts:output_type -> byte.v.forge.waapp.v1.ListWAAccountsResponse
-	12, // 36: byte.v.forge.waapp.v1.WaProfileService.PrepareClientProfile:output_type -> byte.v.forge.waapp.v1.PrepareClientProfileResponse
-	14, // 37: byte.v.forge.waapp.v1.WaProfileService.GetClientProfile:output_type -> byte.v.forge.waapp.v1.GetClientProfileResponse
-	16, // 38: byte.v.forge.waapp.v1.WaProfileService.RetireClientProfile:output_type -> byte.v.forge.waapp.v1.RetireClientProfileResponse
-	33, // [33:39] is the sub-list for method output_type
-	27, // [27:33] is the sub-list for method input_type
-	27, // [27:27] is the sub-list for extension type_name
-	27, // [27:27] is the sub-list for extension extendee
-	0,  // [0:27] is the sub-list for field type_name
+	23, // 17: byte.v.forge.waapp.v1.ListWAAccountsResponse.error:type_name -> byte.v.forge.waapp.v1.WaError
+	24, // 18: byte.v.forge.waapp.v1.DeleteWAAccountRequest.context:type_name -> byte.v.forge.waapp.v1.RequestContext
+	23, // 19: byte.v.forge.waapp.v1.DeleteWAAccountResponse.error:type_name -> byte.v.forge.waapp.v1.WaError
+	24, // 20: byte.v.forge.waapp.v1.PrepareClientProfileRequest.context:type_name -> byte.v.forge.waapp.v1.RequestContext
+	4,  // 21: byte.v.forge.waapp.v1.PrepareClientProfileResponse.client_profile:type_name -> byte.v.forge.waapp.v1.ClientProfile
+	23, // 22: byte.v.forge.waapp.v1.PrepareClientProfileResponse.error:type_name -> byte.v.forge.waapp.v1.WaError
+	24, // 23: byte.v.forge.waapp.v1.GetClientProfileRequest.context:type_name -> byte.v.forge.waapp.v1.RequestContext
+	4,  // 24: byte.v.forge.waapp.v1.GetClientProfileResponse.client_profile:type_name -> byte.v.forge.waapp.v1.ClientProfile
+	23, // 25: byte.v.forge.waapp.v1.GetClientProfileResponse.error:type_name -> byte.v.forge.waapp.v1.WaError
+	24, // 26: byte.v.forge.waapp.v1.RetireClientProfileRequest.context:type_name -> byte.v.forge.waapp.v1.RequestContext
+	4,  // 27: byte.v.forge.waapp.v1.RetireClientProfileResponse.client_profile:type_name -> byte.v.forge.waapp.v1.ClientProfile
+	23, // 28: byte.v.forge.waapp.v1.RetireClientProfileResponse.error:type_name -> byte.v.forge.waapp.v1.WaError
+	5,  // 29: byte.v.forge.waapp.v1.WaProfileService.CreateWAAccount:input_type -> byte.v.forge.waapp.v1.CreateWAAccountRequest
+	7,  // 30: byte.v.forge.waapp.v1.WaProfileService.GetWAAccount:input_type -> byte.v.forge.waapp.v1.GetWAAccountRequest
+	9,  // 31: byte.v.forge.waapp.v1.WaProfileService.ListWAAccounts:input_type -> byte.v.forge.waapp.v1.ListWAAccountsRequest
+	11, // 32: byte.v.forge.waapp.v1.WaProfileService.DeleteWAAccount:input_type -> byte.v.forge.waapp.v1.DeleteWAAccountRequest
+	13, // 33: byte.v.forge.waapp.v1.WaProfileService.PrepareClientProfile:input_type -> byte.v.forge.waapp.v1.PrepareClientProfileRequest
+	15, // 34: byte.v.forge.waapp.v1.WaProfileService.GetClientProfile:input_type -> byte.v.forge.waapp.v1.GetClientProfileRequest
+	17, // 35: byte.v.forge.waapp.v1.WaProfileService.RetireClientProfile:input_type -> byte.v.forge.waapp.v1.RetireClientProfileRequest
+	6,  // 36: byte.v.forge.waapp.v1.WaProfileService.CreateWAAccount:output_type -> byte.v.forge.waapp.v1.CreateWAAccountResponse
+	8,  // 37: byte.v.forge.waapp.v1.WaProfileService.GetWAAccount:output_type -> byte.v.forge.waapp.v1.GetWAAccountResponse
+	10, // 38: byte.v.forge.waapp.v1.WaProfileService.ListWAAccounts:output_type -> byte.v.forge.waapp.v1.ListWAAccountsResponse
+	12, // 39: byte.v.forge.waapp.v1.WaProfileService.DeleteWAAccount:output_type -> byte.v.forge.waapp.v1.DeleteWAAccountResponse
+	14, // 40: byte.v.forge.waapp.v1.WaProfileService.PrepareClientProfile:output_type -> byte.v.forge.waapp.v1.PrepareClientProfileResponse
+	16, // 41: byte.v.forge.waapp.v1.WaProfileService.GetClientProfile:output_type -> byte.v.forge.waapp.v1.GetClientProfileResponse
+	18, // 42: byte.v.forge.waapp.v1.WaProfileService.RetireClientProfile:output_type -> byte.v.forge.waapp.v1.RetireClientProfileResponse
+	36, // [36:43] is the sub-list for method output_type
+	29, // [29:36] is the sub-list for method input_type
+	29, // [29:29] is the sub-list for extension type_name
+	29, // [29:29] is the sub-list for extension extendee
+	0,  // [0:29] is the sub-list for field type_name
 }
 
 func init() { file_byte_v_forge_waapp_v1_profile_proto_init() }
@@ -1199,7 +1316,7 @@ func file_byte_v_forge_waapp_v1_profile_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_byte_v_forge_waapp_v1_profile_proto_rawDesc), len(file_byte_v_forge_waapp_v1_profile_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   14,
+			NumMessages:   16,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

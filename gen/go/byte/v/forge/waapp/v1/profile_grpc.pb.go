@@ -22,6 +22,7 @@ const (
 	WaProfileService_CreateWAAccount_FullMethodName      = "/byte.v.forge.waapp.v1.WaProfileService/CreateWAAccount"
 	WaProfileService_GetWAAccount_FullMethodName         = "/byte.v.forge.waapp.v1.WaProfileService/GetWAAccount"
 	WaProfileService_ListWAAccounts_FullMethodName       = "/byte.v.forge.waapp.v1.WaProfileService/ListWAAccounts"
+	WaProfileService_DeleteWAAccount_FullMethodName      = "/byte.v.forge.waapp.v1.WaProfileService/DeleteWAAccount"
 	WaProfileService_PrepareClientProfile_FullMethodName = "/byte.v.forge.waapp.v1.WaProfileService/PrepareClientProfile"
 	WaProfileService_GetClientProfile_FullMethodName     = "/byte.v.forge.waapp.v1.WaProfileService/GetClientProfile"
 	WaProfileService_RetireClientProfile_FullMethodName  = "/byte.v.forge.waapp.v1.WaProfileService/RetireClientProfile"
@@ -34,6 +35,7 @@ type WaProfileServiceClient interface {
 	CreateWAAccount(ctx context.Context, in *CreateWAAccountRequest, opts ...grpc.CallOption) (*CreateWAAccountResponse, error)
 	GetWAAccount(ctx context.Context, in *GetWAAccountRequest, opts ...grpc.CallOption) (*GetWAAccountResponse, error)
 	ListWAAccounts(ctx context.Context, in *ListWAAccountsRequest, opts ...grpc.CallOption) (*ListWAAccountsResponse, error)
+	DeleteWAAccount(ctx context.Context, in *DeleteWAAccountRequest, opts ...grpc.CallOption) (*DeleteWAAccountResponse, error)
 	PrepareClientProfile(ctx context.Context, in *PrepareClientProfileRequest, opts ...grpc.CallOption) (*PrepareClientProfileResponse, error)
 	GetClientProfile(ctx context.Context, in *GetClientProfileRequest, opts ...grpc.CallOption) (*GetClientProfileResponse, error)
 	RetireClientProfile(ctx context.Context, in *RetireClientProfileRequest, opts ...grpc.CallOption) (*RetireClientProfileResponse, error)
@@ -77,6 +79,16 @@ func (c *waProfileServiceClient) ListWAAccounts(ctx context.Context, in *ListWAA
 	return out, nil
 }
 
+func (c *waProfileServiceClient) DeleteWAAccount(ctx context.Context, in *DeleteWAAccountRequest, opts ...grpc.CallOption) (*DeleteWAAccountResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteWAAccountResponse)
+	err := c.cc.Invoke(ctx, WaProfileService_DeleteWAAccount_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *waProfileServiceClient) PrepareClientProfile(ctx context.Context, in *PrepareClientProfileRequest, opts ...grpc.CallOption) (*PrepareClientProfileResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(PrepareClientProfileResponse)
@@ -114,6 +126,7 @@ type WaProfileServiceServer interface {
 	CreateWAAccount(context.Context, *CreateWAAccountRequest) (*CreateWAAccountResponse, error)
 	GetWAAccount(context.Context, *GetWAAccountRequest) (*GetWAAccountResponse, error)
 	ListWAAccounts(context.Context, *ListWAAccountsRequest) (*ListWAAccountsResponse, error)
+	DeleteWAAccount(context.Context, *DeleteWAAccountRequest) (*DeleteWAAccountResponse, error)
 	PrepareClientProfile(context.Context, *PrepareClientProfileRequest) (*PrepareClientProfileResponse, error)
 	GetClientProfile(context.Context, *GetClientProfileRequest) (*GetClientProfileResponse, error)
 	RetireClientProfile(context.Context, *RetireClientProfileRequest) (*RetireClientProfileResponse, error)
@@ -135,6 +148,9 @@ func (UnimplementedWaProfileServiceServer) GetWAAccount(context.Context, *GetWAA
 }
 func (UnimplementedWaProfileServiceServer) ListWAAccounts(context.Context, *ListWAAccountsRequest) (*ListWAAccountsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListWAAccounts not implemented")
+}
+func (UnimplementedWaProfileServiceServer) DeleteWAAccount(context.Context, *DeleteWAAccountRequest) (*DeleteWAAccountResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteWAAccount not implemented")
 }
 func (UnimplementedWaProfileServiceServer) PrepareClientProfile(context.Context, *PrepareClientProfileRequest) (*PrepareClientProfileResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method PrepareClientProfile not implemented")
@@ -220,6 +236,24 @@ func _WaProfileService_ListWAAccounts_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _WaProfileService_DeleteWAAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteWAAccountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaProfileServiceServer).DeleteWAAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: WaProfileService_DeleteWAAccount_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaProfileServiceServer).DeleteWAAccount(ctx, req.(*DeleteWAAccountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _WaProfileService_PrepareClientProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PrepareClientProfileRequest)
 	if err := dec(in); err != nil {
@@ -292,6 +326,10 @@ var WaProfileService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListWAAccounts",
 			Handler:    _WaProfileService_ListWAAccounts_Handler,
+		},
+		{
+			MethodName: "DeleteWAAccount",
+			Handler:    _WaProfileService_DeleteWAAccount_Handler,
 		},
 		{
 			MethodName: "PrepareClientProfile",

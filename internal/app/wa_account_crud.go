@@ -87,8 +87,18 @@ func (s waAccountStore) upsert(ctx context.Context, account *waappv1.WAAccount) 
 	return s.store.GetWAAccount(ctx, s.workspaceID, waAccountID(account))
 }
 
-func (s waAccountStore) delete(context.Context, string) (*waappv1.WAAccount, bool, error) {
-	return nil, false, NewError(waappv1.WaErrorCode_WA_ERROR_CODE_UNSUPPORTED_OPERATION, "WA account delete is not supported", false)
+func (s waAccountStore) delete(ctx context.Context, accountID string) (*waappv1.WAAccount, bool, error) {
+	account, err := s.store.GetWAAccount(ctx, s.workspaceID, accountID)
+	if isWAAccountNotFound(err) {
+		return nil, false, nil
+	}
+	if err != nil {
+		return nil, false, err
+	}
+	if err := s.store.DeleteWAAccount(ctx, s.workspaceID, accountID); err != nil {
+		return nil, false, err
+	}
+	return account, true, nil
 }
 
 func (s *Server) waAccountPublishers() []accountcrud.ChangePublisher {

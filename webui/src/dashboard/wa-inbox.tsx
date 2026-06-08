@@ -4,6 +4,7 @@ import { Navigate } from 'react-router';
 import type { LongConnectionState } from '../proto/byte/v/forge/waapp/v1/messaging';
 import type { WAAccount } from '../proto/byte/v/forge/waapp/v1/profile';
 import { getWaAccountOtpMessages, getWaContacts, getWaMessages, waAccountID, waKeys } from './wa-api';
+import { useWaContactAutoResolve } from './wa-contact-resolve';
 import { buildWaChatEvents, buildWaContacts, filterWaEvents } from './wa-chat-model';
 import { WaChatThread } from './wa-chat-thread';
 import { WaContactList } from './wa-contact-list';
@@ -14,6 +15,7 @@ export function WaInbox({ account, connection, contactID }: { account: WAAccount
   const messagesQuery = useQuery({ queryKey: waKeys.messages(accountID), queryFn: () => getWaMessages(accountID), enabled: Boolean(accountID), refetchInterval: 8000 });
   const otpQuery = useQuery({ queryKey: waKeys.otpMessages(accountID), queryFn: () => getWaAccountOtpMessages(accountID), enabled: Boolean(accountID), refetchInterval: 10000 });
   const contactsQuery = useQuery({ queryKey: waKeys.contacts(accountID), queryFn: () => getWaContacts(accountID), enabled: Boolean(accountID), refetchInterval: 30000 });
+  useWaContactAutoResolve(accountID, contactsQuery.data?.contacts || []);
   const events = useMemo(() => buildWaChatEvents(messagesQuery.data?.messages || [], otpQuery.data?.otp_messages || []), [messagesQuery.data?.messages, otpQuery.data?.otp_messages]);
   const contacts = useMemo(() => buildWaContacts(events, contactsQuery.data?.contacts || []), [events, contactsQuery.data?.contacts]);
   const activeContactID = contacts.some((contact) => contact.id === contactID) ? contactID : contacts[0]?.id || '';

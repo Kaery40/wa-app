@@ -89,6 +89,20 @@ Observed reverse points from `workspace/wa-eng/app-release-re`:
 
 wa-app now extracts these as internal contact hints and projects them into the account-local `WAContact` record keyed by the LID JID. The public contract is unchanged; the UI should show the resolved phone-number/name when available and never surface the raw LID as the display title.
 
+## 2026-06-09 dirty/app-state node pass
+
+Reverse targets:
+
+- `X/AbstractC34581eJ.java`: binary-node secondary token table contains the app-state and dirty-sync vocabulary used by incoming stanzas: `collection`, `sync`, `patch`, `patches`, `regular`, `regular_low`, `regular_high`, `critical_block`, `critical_unblock_low`, `w:sync:app:state`, `urn:xmpp:whatsapp:dirty`, `dirty`, `clean`, `return_snapshot`, and `keys`.
+- `X/C192348eT.java`: the app builds a `clean` dirty-bit acknowledgement with `type="syncd_app_state"` after handling app-state dirtiness.
+- `X/C41611pz.java`: `md-app-state` media uses the `"WhatsApp App State Keys"` HKDF info, confirming that app-state payloads are not ordinary chat message text.
+- `X/C30074DXy.java`, `X/DZB.java`, `X/DYG.java`, and `X/C30141DaD.java`: protocol-message app-state key share carries repeated key records (`key_id`, `key_data`, fingerprint, timestamp). Full app-state patch decryption needs this key store; it must not be guessed from LID values or message text.
+- `X/C24912B0t.java`: history sync payload carries `conversations` and `inline_contacts`; `inline_contacts` is the reverse class `C24896B0d` with `pn_jid = 1`, `lid_jid = 2`, `full_name = 3`, `first_name = 4`, `username = 5`.
+- `X/C24914B0v.java`: history sync conversation records expose `id = 1`, `name = 13`, `display_name = 38`, `pn_jid = 39`, `lid_jid = 42`, and `username = 43`.
+- `X/C24915B0w.java` + `X/C24916B0x.java`: history sync message records expose `push_name = 19`, `verified_biz_name = 37`, and a message key with `remote_jid = 1` / `participant = 4`; these can provide a safe LID-to-name hint even when the PN is still unavailable.
+
+Implementation note: wa-app extends the binary-node token subset needed for dirty/app-state nodes and scans safe plaintext binary node payloads for the same contact-hint protobuf records already used after message decryption. Encrypted `enc` payloads and media/routing blobs are excluded from this plaintext scan. The contact hint recognizer now also covers history-sync conversation, inline-contact, and message-key/push-name records from the reverse classes above. This preserves the existing Signal/app-state boundaries while allowing future plaintext sync notifications to enrich contacts without logging or exposing raw JIDs, names, phone numbers, message bodies, keys, or tokens.
+
 ## 2026-06-08 active usync contact query
 
 Reverse target: `AnonymousClass846.A0E(querySyncUsernameByLid)` and `C08180Zr.A05/A06/BuX`.

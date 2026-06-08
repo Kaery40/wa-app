@@ -1,5 +1,5 @@
 import type { RequestAccountEmailOtpResponse, SetAccountEmailResponse, SetTwoFactorAuthSettingsResponse, VerifyAccountEmailOtpResponse } from '../proto/byte/v/forge/waapp/v1/account_settings';
-import type { ListWAContactsResponse } from '../proto/byte/v/forge/waapp/v1/contacts';
+import type { ListWAContactsResponse, ResolveWAContactsResponse } from '../proto/byte/v/forge/waapp/v1/contacts';
 import type { ListAccountOtpMessagesResponse } from '../proto/byte/v/forge/waapp/v1/extraction';
 import type { GetLongConnectionStatusResponse, ListAccountMessagesResponse, LongConnectionState } from '../proto/byte/v/forge/waapp/v1/messaging';
 import type { DeleteWAAccountResponse, ListClientProfilesResponse, ListWAAccountsResponse, WAAccount } from '../proto/byte/v/forge/waapp/v1/profile';
@@ -17,6 +17,7 @@ export const waKeys = {
   profiles: (waAccountId: string) => ['wa', 'profiles', waAccountId] as const,
   messages: (waAccountId: string) => ['wa', 'messages', waAccountId] as const,
   contacts: (waAccountId: string) => ['wa', 'contacts', waAccountId] as const,
+  contactResolve: (waAccountId: string) => ['wa', 'contacts', 'resolve', waAccountId] as const,
   otpMessages: (waAccountId: string) => ['wa', 'otp-messages', waAccountId] as const,
   connections: (filters: WaConnectionFilters = {}) => ['wa', 'connections', filters.login_state_id || '', filters.wa_account_id || '', filters.client_profile_id || '', filters.registered_identity_id || ''] as const,
 };
@@ -61,6 +62,10 @@ export function getWaContacts(waAccountId: string, cursor = '') {
   const params = new URLSearchParams({ wa_account_id: waAccountId, limit: '500' });
   if (cursor) params.set('cursor', cursor);
   return api<ListWAContactsResponse>(`/api/wa/contacts?${params}`);
+}
+
+export function resolveWaContacts(waAccountId: string, jids: string[]) {
+  return api<ResolveWAContactsResponse>('/api/wa/contacts/resolve', { method: 'POST', body: JSON.stringify({ wa_account_id: waAccountId, jids, limit: jids.length }) });
 }
 
 export async function deleteWaAccount(account: WAAccount | string) {

@@ -60,12 +60,38 @@ func contactHintsFromChatdNode(node chatdNode) []waContactHint {
 	var walk func(chatdNode)
 	walk = func(current chatdNode) {
 		hints = append(hints, contactHintsFromChatdAttrs(current.Attrs)...)
+		if raw, ok := current.Content.([]byte); ok && shouldScanChatdBinaryContactPayload(current.Tag) {
+			hints = append(hints, nativeContactHints(raw)...)
+		}
 		for _, child := range chatdChildren(current) {
 			walk(child)
 		}
 	}
 	walk(node)
 	return dedupeWAContactHints(hints)
+}
+
+func shouldScanChatdBinaryContactPayload(tag string) bool {
+	switch tag {
+	case "enc",
+		"routing_info",
+		"edge_routing",
+		"media",
+		"picture",
+		"preview",
+		"thumbnail-image",
+		"thumbnail-video",
+		"thumbnail-document",
+		"thumbnail-link",
+		"download",
+		"key",
+		"identity",
+		"device-identity",
+		"privacy_token":
+		return false
+	default:
+		return true
+	}
 }
 
 func contactHintsFromChatdAttrs(attrs map[string]string) []waContactHint {
@@ -194,6 +220,15 @@ func collectWAContactHints(raw []byte, path []protowire.Number, depth int, hints
 func waKnownContactRecordHints(raw []byte) []waContactHint {
 	hints := []waContactHint{}
 	hints = append(hints, waSyncdIndexedContactHints(raw)...)
+	if hint := waInlineContactRecordHint(raw); hint.valid() {
+		hints = append(hints, hint)
+	}
+	if hint := waHistorySyncConversationRecordHint(raw); hint.valid() {
+		hints = append(hints, hint)
+	}
+	if hint := waHistorySyncMessageRecordHint(raw); hint.valid() {
+		hints = append(hints, hint)
+	}
 	if hint := waAppStateContactActionHint(raw); hint.valid() {
 		hints = append(hints, hint)
 	}
@@ -543,6 +578,93 @@ func waInlineContactRecordHint(raw []byte) waContactHint {
 		}
 	}
 	return hint.normalized()
+}
+
+func waHistorySyncConversationRecordHint(raw []byte) waContactHint {
+	fields, ok := parseWAProtoFieldsWithLimit(raw, 96)
+	if !ok {
+		return waContactHint{}
+	}
+	var hint waContactHint
+	for _, field := range fields {
+		if field.kind != protowire.BytesType {
+			continue
+		}
+		switch field.number {
+		case 1:
+			applyContactRecordJID(&hint, waProtoPlainString(field.value))
+		case 13:
+			hint.WAName = waContactNameString(field.value)
+		case 38:
+			hint.DisplayName = waContactNameString(field.value)
+		case 39:
+			hint.PNJID = normalizeWAJID(waProtoPlainString(field.value))
+		case 42:
+			hint.LIDJID = normalizeWAJID(waProtoPlainString(field.value))
+		case 43:
+			hint.Username = waContactNameString(field.value)
+		}
+	}
+	return hint.normalized()
+}
+
+func waHistorySyncMessageRecordHint(raw []byte) waContactHint {
+	fields, ok := parseWAProtoFieldsWithLimit(raw, 128)
+	if !ok {
+		return waContactHint{}
+	}
+	var hint waContactHint
+	for _, field := range fields {
+		if field.kind != protowire.BytesType {
+			continue
+		}
+		switch field.number {
+		case 1:
+			for _, jid := range waMessageKeyJIDs(field.value) {
+				applyContactRecordJID(&hint, jid)
+			}
+		case 5:
+			applyContactRecordJID(&hint, waProtoPlainString(field.value))
+		case 19:
+			hint.DisplayName = waContactNameString(field.value)
+		case 37:
+			hint.WAName = waContactNameString(field.value)
+		}
+	}
+	return hint.normalized()
+}
+
+func waMessageKeyJIDs(raw []byte) []string {
+	fields, ok := parseWAProtoFieldsWithLimit(raw, 8)
+	if !ok {
+		return nil
+	}
+	out := []string{}
+	for _, field := range fields {
+		if field.kind != protowire.BytesType {
+			continue
+		}
+		switch field.number {
+		case 1, 4:
+			if jid := waProtoPlainString(field.value); jid != "" {
+				out = append(out, jid)
+			}
+		}
+	}
+	return out
+}
+
+func applyContactRecordJID(hint *waContactHint, value string) {
+	if hint == nil {
+		return
+	}
+	jid := normalizeWAJID(value)
+	switch {
+	case strings.HasSuffix(jid, "@lid"):
+		hint.LIDJID = firstNonEmpty(hint.LIDJID, jid)
+	case strings.HasSuffix(jid, "@s.whatsapp.net"):
+		hint.PNJID = firstNonEmpty(hint.PNJID, jid)
+	}
 }
 
 func (h waContactHint) valid() bool {

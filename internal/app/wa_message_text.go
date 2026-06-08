@@ -342,6 +342,70 @@ func waCompositeTextField(path []protowire.Number, raw []byte) (string, int, boo
 		if text := waPollDisplayText(raw); text != "" {
 			return text, 900, true
 		}
+	case sameWAPath(normalized, 61):
+		if text := waScheduledCallDisplayText(raw); text != "" {
+			return text, 860, true
+		}
+	case sameWAPath(normalized, 72):
+		if text := waMessageFieldsDisplayText("通话", raw, []protowire.Number{4}); text != "" {
+			return text, 835, true
+		}
+	case sameWAPath(normalized, 75):
+		if text := waEventDisplayText(raw); text != "" {
+			return text, 890, true
+		}
+	case sameWAPath(normalized, 77):
+		if text := waMessageFieldsDisplayText("评论", raw, []protowire.Number{1}); text != "" {
+			return text, 865, true
+		}
+	case sameWAPath(normalized, 78), sameWAPath(normalized, 108), sameWAPath(normalized, 113):
+		if text := waNewsletterInviteDisplayText(raw); text != "" {
+			return text, 850, true
+		}
+	case sameWAPath(normalized, 83):
+		if text := waMessageFieldsDisplayText("相册", raw, []protowire.Number{1}); text != "" {
+			return text, 875, true
+		}
+	case sameWAPath(normalized, 86):
+		if text := waStickerPackDisplayText(raw); text != "" {
+			return text, 850, true
+		}
+	case sameWAPath(normalized, 88), sameWAPath(normalized, 115):
+		if text := waPollResultDisplayText(raw); text != "" {
+			return text, 860, true
+		}
+	case sameWAPath(normalized, 97):
+		if text := waRichResponseDisplayText(raw); text != "" {
+			return text, 850, true
+		}
+	case sameWAPath(normalized, 105):
+		if text := waMessageFieldsDisplayText("状态问答", raw, []protowire.Number{2}); text != "" {
+			return text, 865, true
+		}
+	case sameWAPath(normalized, 107):
+		if text := waMessageFieldsDisplayText("问答回复", raw, []protowire.Number{2}); text != "" {
+			return text, 865, true
+		}
+	case sameWAPath(normalized, 109):
+		if text := waMessageFieldsDisplayText("状态引用", raw, []protowire.Number{2}); text != "" {
+			return text, 850, true
+		}
+	case sameWAPath(normalized, 121):
+		if text := waPollAddOptionDisplayText(raw); text != "" {
+			return text, 850, true
+		}
+	case sameWAPath(normalized, 122):
+		if text := waEventInviteDisplayText(raw); text != "" {
+			return text, 875, true
+		}
+	case sameWAPath(normalized, 124):
+		if text := waMessageFieldsDisplayText("付款提醒", raw, []protowire.Number{3}); text != "" {
+			return text, 840, true
+		}
+	case sameWAPath(normalized, 125):
+		if text := waMessageFieldsDisplayText("分摊付款", raw, []protowire.Number{3}); text != "" {
+			return text, 840, true
+		}
 	}
 	return "", 0, false
 }
@@ -587,6 +651,105 @@ func waOrderDisplayText(raw []byte) string {
 	return withWAPrefix("订单", strings.Join(parts, "\n"))
 }
 
+func waScheduledCallDisplayText(raw []byte) string {
+	return waMessageFieldsDisplayText("通话", raw, []protowire.Number{3})
+}
+
+func waEventDisplayText(raw []byte) string {
+	parts := uniqueNonEmptyStrings(
+		waMessageStringAtPath(raw, 3),
+		waMessageStringAtPath(raw, 4),
+		waMessageStringAtPath(raw, 6),
+	)
+	if location := waBytesAtPath(raw, 5); len(location) > 0 {
+		parts = append(parts, strings.TrimPrefix(waLocationDisplayText("位置", location), "[位置] "))
+	}
+	if len(parts) == 0 {
+		return ""
+	}
+	return withWAPrefix("活动", strings.Join(uniqueNonEmptyStrings(parts...), "\n"))
+}
+
+func waEventInviteDisplayText(raw []byte) string {
+	return waMessageFieldsDisplayText("活动邀请", raw, []protowire.Number{3}, []protowire.Number{6}, []protowire.Number{9})
+}
+
+func waNewsletterInviteDisplayText(raw []byte) string {
+	return waMessageFieldsDisplayText("频道邀请", raw, []protowire.Number{2}, []protowire.Number{4})
+}
+
+func waStickerPackDisplayText(raw []byte) string {
+	return waMessageFieldsDisplayText("贴纸包", raw, []protowire.Number{2}, []protowire.Number{3}, []protowire.Number{10}, []protowire.Number{12})
+}
+
+func waPollResultDisplayText(raw []byte) string {
+	return waMessageFieldsDisplayText("投票结果", raw, []protowire.Number{1})
+}
+
+func waPollAddOptionDisplayText(raw []byte) string {
+	parts := []string{}
+	for _, option := range waBytesValuesAtPath(raw, 2) {
+		if text := waMessageStringAtPath(option, 1); text != "" {
+			parts = append(parts, "• "+text)
+		}
+	}
+	if len(parts) == 0 {
+		return ""
+	}
+	return withWAPrefix("投票选项", strings.Join(uniqueNonEmptyStrings(parts...), "\n"))
+}
+
+func waRichResponseDisplayText(raw []byte) string {
+	parts := []string{}
+	for _, submessage := range waBytesValuesAtPath(raw, 2) {
+		parts = append(parts, waNestedMessageTextParts(submessage, 0)...)
+	}
+	if unified := waBytesAtPath(raw, 3); len(unified) > 0 {
+		parts = append(parts, waNestedMessageTextParts(unified, 0)...)
+	}
+	if len(parts) == 0 {
+		return ""
+	}
+	return withWAPrefix("富响应", strings.Join(uniqueNonEmptyStrings(parts...), "\n"))
+}
+
+func waMessageFieldsDisplayText(label string, raw []byte, paths ...[]protowire.Number) string {
+	parts := []string{}
+	for _, path := range paths {
+		if text := waMessageStringAtPath(raw, path...); text != "" {
+			parts = append(parts, text)
+		}
+	}
+	if len(parts) == 0 {
+		return ""
+	}
+	return withWAPrefix(label, strings.Join(uniqueNonEmptyStrings(parts...), "\n"))
+}
+
+func waNestedMessageTextParts(raw []byte, depth int) []string {
+	if depth > 3 || len(raw) == 0 {
+		return nil
+	}
+	parts := []string{}
+	if text := waMessageStringAtPath(raw); text != "" {
+		parts = append(parts, text)
+	}
+	fields, ok := parseWAProtoFieldsWithLimit(raw, 64)
+	if !ok {
+		return uniqueNonEmptyStrings(parts...)
+	}
+	for _, field := range fields {
+		if field.kind != protowire.BytesType {
+			continue
+		}
+		if text := waMessageStringAtPath(field.value); text != "" {
+			parts = append(parts, text)
+		}
+		parts = append(parts, waNestedMessageTextParts(field.value, depth+1)...)
+	}
+	return uniqueNonEmptyStrings(parts...)
+}
+
 func waProductPrice(raw []byte) string {
 	currency := waHumanStringAtPath(raw, 1, 5)
 	amount, ok := waVarintAtPath(raw, 1, 12)
@@ -625,6 +788,20 @@ func formatWAAmount(currency string, amount1000 uint64) string {
 
 func waHumanStringAtPath(raw []byte, path ...protowire.Number) string {
 	return waHumanDisplayText(waStringAtPath(raw, path...))
+}
+
+func waMessageStringAtPath(raw []byte, path ...protowire.Number) string {
+	text := waStringAtPath(raw, path...)
+	if text == "" {
+		return ""
+	}
+	if jsonText := waJSONDisplayText(text); jsonText != "" {
+		return jsonText
+	}
+	if urlText := waJSONURLValue(text); urlText != "" {
+		return urlText
+	}
+	return waHumanDisplayText(text)
 }
 
 func waStringAtPath(raw []byte, path ...protowire.Number) string {
@@ -831,10 +1008,16 @@ func waMessagePlaceholder(path []protowire.Number) (string, int, bool) {
 		return "[语音]", 520, true
 	case 9:
 		return "[视频]", 520, true
+	case 10:
+		return "[通话]", 500, true
+	case 11:
+		return "[聊天]", 500, true
 	case 13:
 		return "[联系人]", 510, true
 	case 14, 25:
 		return "[模板]", 500, true
+	case 16, 22, 23, 24, 44, 124, 125:
+		return "[支付]", 500, true
 	case 18:
 		return "[实时位置]", 500, true
 	case 26:
@@ -845,14 +1028,92 @@ func waMessagePlaceholder(path []protowire.Number) (string, int, bool) {
 		return "[商品]", 500, true
 	case 36, 39:
 		return "[列表]", 500, true
+	case 37, 55, 59:
+		return "[查看一次]", 500, true
 	case 38:
 		return "[订单]", 500, true
+	case 40:
+		return "[限时消息]", 500, true
 	case 42, 43:
 		return "[按钮]", 500, true
 	case 45, 48:
 		return "[互动]", 500, true
 	case 46:
 		return "[回应]", 500, true
+	case 50:
+		return "[投票更新]", 500, true
+	case 51:
+		return "[保留消息]", 500, true
+	case 53:
+		return "[文件]", 500, true
+	case 54:
+		return "[请求电话号码]", 500, true
+	case 56:
+		return "[加密回应]", 500, true
+	case 58:
+		return "[编辑消息]", 500, true
+	case 61, 65, 69, 72:
+		return "[通话]", 500, true
+	case 62:
+		return "[群组提及]", 500, true
+	case 63:
+		return "[置顶消息]", 500, true
+	case 67, 100, 104:
+		return "[机器人消息]", 500, true
+	case 70, 102:
+		return "[历史消息]", 500, true
+	case 71, 76, 82:
+		return "[加密消息]", 500, true
+	case 74:
+		return "[动态贴纸]", 500, true
+	case 75, 122:
+		return "[活动]", 500, true
+	case 77:
+		return "[评论]", 500, true
+	case 78, 108, 113:
+		return "[频道邀请]", 500, true
+	case 80:
+		return "[占位消息]", 500, true
+	case 85:
+		return "[活动图片]", 500, true
+	case 86:
+		return "[贴纸包]", 500, true
+	case 87, 92:
+		return "[状态提及]", 500, true
+	case 88, 115:
+		return "[投票结果]", 500, true
+	case 90:
+		return "[投票选项图片]", 500, true
+	case 91:
+		return "[关联消息]", 500, true
+	case 97:
+		return "[富响应]", 500, true
+	case 98:
+		return "[状态通知]", 500, true
+	case 99:
+		return "[限制分享]", 500, true
+	case 96:
+		return "[群状态]", 500, true
+	case 101, 105, 107:
+		return "[问答]", 500, true
+	case 103:
+		return "[群状态]", 500, true
+	case 106:
+		return "[问答回复]", 500, true
+	case 109:
+		return "[状态引用]", 500, true
+	case 110:
+		return "[状态贴纸互动]", 500, true
+	case 116, 117:
+		return "[频道资料]", 500, true
+	case 118:
+		return "[剧透]", 500, true
+	case 120:
+		return "[条件展示消息]", 500, true
+	case 121:
+		return "[投票选项]", 500, true
+	case 123:
+		return "[密钥共享]", 500, true
 	case 49, 60, 64, 93, 111, 119:
 		return "[投票]", 500, true
 	case 66:
@@ -927,7 +1188,7 @@ func isWAWrapperInnerField(field protowire.Number, inner protowire.Number) bool 
 	switch field {
 	case 31:
 		return inner == 2
-	case 37, 40, 53, 55, 58, 59, 62, 67, 83, 87, 91, 92, 96, 103, 104, 106, 116, 117, 120:
+	case 37, 40, 53, 55, 58, 59, 62, 67, 74, 85, 87, 90, 91, 92, 93, 96, 99, 100, 101, 103, 104, 106, 116, 117, 118:
 		return inner == 1
 	default:
 		return false

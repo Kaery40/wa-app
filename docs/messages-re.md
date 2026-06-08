@@ -27,6 +27,20 @@ JSON strings in rich-message params may contain keys such as `display_text`, `ur
 
 `X/C9AP.java` confirms CTA/link button JSON also carries `merchant_url`, `consented_users_url`, `message_origin`, `webview_presentation`, `payment_link_preview`, `merchant_payment_link_preview`, and `webview_interaction`. Only human display strings and HTTP(S) URLs are projected into chat text; boolean/webview flags stay internal UI metadata and are not shown as raw JSON.
 
+## 2026-06-09 additional message surfaces
+
+Reverse targets from `C30285DcY.java` and child message classes:
+
+- `DYH.java` is a real nested-message wrapper with `message = 1`; this covers view-once, ephemeral, edited, group/status/bot/question/spoiler wrapper messages. Album (`C30181Dar`) and conditional reveal (`C30182Das`) are not `DYH` wrappers; album field `1` is a caption and conditional reveal field `1` is encrypted payload.
+- `C30256Dc5.java` / `C30240Dbo.java`: event messages expose title/name, description/caption, location, join/call links, and start/end timestamps.
+- `C30152DaO.java`, `B0U.java`, and `C30205DbF.java`: scheduled/biz/call-log call messages expose a title or caption when present.
+- `C30218DbS.java` / `C30207DbH.java`: newsletter invite messages expose newsletter name and caption.
+- `DZD.java`, `DZQ.java`, `C24892Azz.java`, and `B0V.java`: comments, question responses, and status quote surfaces expose user-visible text in field `1` or `2`.
+- `C30273DcM.java`, `C30183Dat.java`, `DZM.java`, `C8PQ.java`, and `C8PL.java`: sticker-pack, poll result/add-option, payment reminder, and split-payment records have displayable names/descriptions.
+- `C30178Dao.java`: rich response messages hold repeated submessages and a unified response. wa-app scans nested safe string/JSON fields and still filters machine tokens.
+
+Implementation note: wa-app now normalizes only confirmed `DYH` wrappers, preserves album captions, avoids interpreting conditional encrypted payload as a nested message, and returns semantic placeholders for known non-text message types instead of empty bodies.
+
 ## One-time historical plaintext backfill
 
 Historical rows created before `plaintext_value` was persisted can be repaired by re-invoking `WaExtractionService.DecryptMessage` with `include_sensitive_plaintext = true` and `SESSION_COMMIT_POLICY_TRANSIENT`. This is an operational one-off: it writes normal `wa_decrypted_messages` rows through the service path and does not add migration code or retain temporary tooling.

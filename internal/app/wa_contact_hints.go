@@ -231,6 +231,9 @@ func waKnownContactRecordHints(raw []byte) []waContactHint {
 	if hint := waHistorySyncMessageRecordHint(raw); hint.valid() {
 		hints = append(hints, hint)
 	}
+	if hint := waContactMetadataRecordHint(raw); hint.valid() {
+		hints = append(hints, hint)
+	}
 	if hint := waAppStateContactActionHint(raw); hint.valid() {
 		hints = append(hints, hint)
 	}
@@ -636,6 +639,48 @@ func waHistorySyncMessageRecordHint(raw []byte) waContactHint {
 	return hint.normalized()
 }
 
+func waContactMetadataRecordHint(raw []byte) waContactHint {
+	fields, ok := parseWAProtoFieldsWithLimit(raw, 16)
+	if !ok {
+		return waContactHint{}
+	}
+	var firstName string
+	var lastName string
+	var hasContactMetadataMarker bool
+	var hint waContactHint
+	for _, field := range fields {
+		switch {
+		case field.kind == protowire.BytesType:
+			switch field.number {
+			case 1:
+				firstName = waContactNameString(field.value)
+			case 2:
+				lastName = waContactNameString(field.value)
+			case 3:
+				hint.DisplayName = waContactNameString(field.value)
+			case 6:
+				hint.Username = waContactNameString(field.value)
+			case 7:
+				hint.PNJID = phoneNumberWAJID(waProtoPlainString(field.value))
+			}
+		case field.kind == protowire.VarintType:
+			switch field.number {
+			case 4, 9:
+				hasContactMetadataMarker = true
+			case 8:
+				hint.LIDJID = numericWAJID(field.varint, "lid")
+			}
+		}
+	}
+	if !hasContactMetadataMarker {
+		return waContactHint{}
+	}
+	if personName := strings.Join(uniqueNonEmptyStrings(firstName, lastName), " "); personName != "" {
+		hint.DisplayName = firstNonEmpty(hint.DisplayName, personName)
+	}
+	return hint.normalized()
+}
+
 func waMessageKeyJIDs(raw []byte) []string {
 	fields, ok := parseWAProtoFieldsWithLimit(raw, 8)
 	if !ok {
@@ -730,6 +775,14 @@ func numericWAJID(value uint64, domain string) string {
 		return ""
 	}
 	return local + "@" + domain
+}
+
+func phoneNumberWAJID(value string) string {
+	digits := digitsOnly(value)
+	if len(digits) < 5 || len(digits) > 24 {
+		return ""
+	}
+	return digits + "@s.whatsapp.net"
 }
 
 func waGunzipPayload(raw []byte) ([]byte, bool) {

@@ -19,6 +19,7 @@ service WaAccountSettingsService {
   rpc RequestAccountEmailOtp(RequestAccountEmailOtpRequest) returns (RequestAccountEmailOtpResponse);
   rpc VerifyAccountEmailOtp(VerifyAccountEmailOtpRequest) returns (VerifyAccountEmailOtpResponse);
   rpc SetAccountProfileName(SetAccountProfileNameRequest) returns (SetAccountProfileNameResponse);
+  rpc GetAccountProfilePicture(GetAccountProfilePictureRequest) returns (GetAccountProfilePictureResponse);
   rpc SetAccountProfilePicture(SetAccountProfilePictureRequest) returns (SetAccountProfilePictureResponse);
   rpc RemoveAccountProfilePicture(RemoveAccountProfilePictureRequest) returns (RemoveAccountProfilePictureResponse);
 }
@@ -123,6 +124,18 @@ message SetAccountProfileNameRequest {
 message SetAccountProfileNameResponse {
   AccountSettingsOperation operation = 1;
   WaError error = 2;
+}
+
+message GetAccountProfilePictureRequest {
+  RequestContext context = 1;
+  AccountLoginSelector selector = 2;
+}
+
+message GetAccountProfilePictureResponse {
+  bytes image = 1;
+  string content_type = 2;
+  string profile_picture_id = 3;
+  WaError error = 4;
 }
 
 message SetAccountProfilePictureRequest {

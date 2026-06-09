@@ -123,6 +123,10 @@ export async function removeWaAccountProfilePicture(account: WAAccount) {
 
 export const waAccountID = (account?: WAAccount) => account?.wa_account_id || '';
 export const waAccountTitle = (account?: WAAccount) => account?.phone?.e164_number || waAccountID(account) || '-';
+export function waAccountProfilePictureURL(account: WAAccount | string, version = 'latest') {
+  const accountID = typeof account === 'string' ? account : waAccountID(account);
+  return accountID ? `/api/wa/accounts/${encodeURIComponent(accountID)}/profile-picture?v=${encodeURIComponent(version)}` : '';
+}
 
 function waAccountSettingsPayload(account: WAAccount) {
   const accountID = waAccountID(account);

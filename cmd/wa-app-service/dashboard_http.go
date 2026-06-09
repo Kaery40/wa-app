@@ -137,6 +137,10 @@ func (s *dashboardHTTP) handleAccount(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "wa-app service is not configured"})
 		return
 	}
+	if strings.HasSuffix(r.URL.Path, "/profile-picture") {
+		s.handleAccountProfilePicture(w, r)
+		return
+	}
 	accountID, err := url.PathUnescape(strings.Trim(strings.TrimPrefix(r.URL.Path, "/api/wa/accounts/"), "/"))
 	if err != nil || accountID == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "wa_account_id is required"})
@@ -160,6 +164,30 @@ func (s *dashboardHTTP) handleAccount(w http.ResponseWriter, r *http.Request) {
 	default:
 		methodNotAllowed(w, http.MethodGet+", "+http.MethodDelete)
 	}
+}
+
+func (s *dashboardHTTP) handleAccountProfilePicture(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		methodNotAllowed(w, http.MethodGet)
+		return
+	}
+	accountID, ok := accountIDFromProfilePicturePath(r.URL.Path)
+	if !ok {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "wa_account_id is required"})
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+	picture, err := s.service.GetWAAccountProfilePicture(ctx, accountID)
+	if err != nil {
+		if app.IsWAProfilePictureNotFound(err) {
+			http.NotFound(w, r)
+			return
+		}
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "load WA account profile picture failed"})
+		return
+	}
+	writeProfilePicture(w, picture.ContentType, picture.ProfilePictureID, "private, no-cache", picture.Data)
 }
 
 func (s *dashboardHTTP) handleCreateAccount(w http.ResponseWriter, r *http.Request) {
@@ -411,20 +439,29 @@ func (s *dashboardHTTP) handleContactProfilePicture(w http.ResponseWriter, r *ht
 	defer cancel()
 	picture, err := s.service.GetWAContactProfilePicture(ctx, contactID)
 	if err != nil {
-		if app.IsWAContactProfilePictureNotFound(err) {
+		if app.IsWAProfilePictureNotFound(err) {
 			http.NotFound(w, r)
 			return
 		}
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "load WA contact profile picture failed"})
 		return
 	}
-	w.Header().Set("Content-Type", picture.ContentType)
-	w.Header().Set("Cache-Control", "private, max-age=3600")
-	if etag := safeHTTPETag(picture.ProfilePictureID); etag != "" {
+	writeProfilePicture(w, picture.ContentType, picture.ProfilePictureID, "private, max-age=3600", picture.Data)
+}
+
+func writeProfilePicture(w http.ResponseWriter, contentType string, etagValue string, cacheControl string, data []byte) {
+	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("Cache-Control", cacheControl)
+	if etag := safeHTTPETag(etagValue); etag != "" {
 		w.Header().Set("ETag", etag)
 	}
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(picture.Data)
+	_, _ = w.Write(data)
+}
+
+func accountIDFromProfilePicturePath(path string) (string, bool) {
+	value := strings.TrimSuffix(strings.TrimPrefix(path, "/api/wa/accounts/"), "/profile-picture")
+	return parseContactIDPathValue(value)
 }
 
 func contactIDFromProfilePicturePath(path string) (string, bool) {

@@ -127,12 +127,16 @@ func (s *Server) SetAccountProfilePicture(ctx context.Context, req *waappv1.SetA
 	if err != nil {
 		return &waappv1.SetAccountProfilePictureResponse{Error: ToProtoError(err)}, nil
 	}
+	contentType, _ := profilePictureContentType(image, req.GetContentType())
 	op, result, err := s.applyAccountSettingsResult(ctx, req.GetContext(), req.GetSelector(), waappv1.AccountSettingsOperationKind_ACCOUNT_SETTINGS_OPERATION_KIND_ACCOUNT_PROFILE_PICTURE_SET, func(input EngineAccountSettingsInput) EngineAccountSettingsInput {
 		input.ProfilePicture = image
 		return input
 	})
 	if err != nil {
 		return &waappv1.SetAccountProfilePictureResponse{Error: ToProtoError(err)}, nil
+	}
+	if op.GetError() == nil {
+		s.cacheWAAccountProfilePicture(ctx, op.GetWaAccountId(), WAContactProfilePicture{ProfilePictureID: result.ProfilePictureID, ContentType: contentType, Data: image})
 	}
 	return &waappv1.SetAccountProfilePictureResponse{Operation: op, ProfilePictureId: result.ProfilePictureID, HasStaging: result.HasStaging, Error: op.GetError()}, nil
 }
@@ -144,6 +148,9 @@ func (s *Server) RemoveAccountProfilePicture(ctx context.Context, req *waappv1.R
 	op, err := s.applyAccountSettings(ctx, req.GetContext(), req.GetSelector(), waappv1.AccountSettingsOperationKind_ACCOUNT_SETTINGS_OPERATION_KIND_ACCOUNT_PROFILE_PICTURE_REMOVE, nil)
 	if err != nil {
 		return &waappv1.RemoveAccountProfilePictureResponse{Error: ToProtoError(err)}, nil
+	}
+	if op.GetError() == nil {
+		s.deleteWAAccountProfilePictureCache(ctx, op.GetWaAccountId())
 	}
 	return &waappv1.RemoveAccountProfilePictureResponse{Operation: op, Error: op.GetError()}, nil
 }

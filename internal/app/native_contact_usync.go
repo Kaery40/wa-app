@@ -472,14 +472,13 @@ func contactUsyncNames(userNode chatdNode) (string, string, string, bool) {
 			verifiedName = firstNonEmpty(verifiedName, businessNodeName(verifiedNode))
 		}
 		if profileNode, ok := chatdChild(businessNode, "profile"); ok {
+			verifiedName = firstNonEmpty(verifiedName, businessVerifiedNodeName(profileNode))
 			displayName = firstNonEmpty(displayName, businessNodeName(profileNode))
 		}
 	}
 	if hasBusinessProfile {
 		displayName = firstNonEmpty(displayName, businessNodeName(businessProfileNode), businessProfileNodeName(businessProfileNode))
-		if verifiedNode, ok := findChatdNode(businessProfileNode, "verified_name"); ok {
-			verifiedName = firstNonEmpty(verifiedName, businessNodeName(verifiedNode))
-		}
+		verifiedName = firstNonEmpty(verifiedName, businessVerifiedNodeName(businessProfileNode))
 	}
 	return displayName, username, verifiedName, hasBusiness || hasBusinessProfile
 }
@@ -616,7 +615,18 @@ func businessNodeName(node chatdNode) string {
 }
 
 func businessProfileNodeName(node chatdNode) string {
-	for _, tag := range []string{"business_name", "verified_name", "display_name", "name", "push_name", "profile_name"} {
+	for _, tag := range []string{"business_name", "verified_name", "biz_identity_info", "business_identity_info", "display_name", "name", "push_name", "profile_name"} {
+		if child, ok := findChatdNode(node, tag); ok {
+			if value := businessNodeName(child); value != "" {
+				return value
+			}
+		}
+	}
+	return ""
+}
+
+func businessVerifiedNodeName(node chatdNode) string {
+	for _, tag := range []string{"verified_name", "biz_identity_info", "business_identity_info"} {
 		if child, ok := findChatdNode(node, tag); ok {
 			if value := businessNodeName(child); value != "" {
 				return value
@@ -742,11 +752,9 @@ func contactFromBusinessNode(accountID string, node chatdNode, now time.Time, re
 	pnJID := firstNonEmpty(firstPNJIDInNode(node), normalizePNQueryJID(ref.QueryJID))
 	contact.Number = contactNumberForJID(pnJID)
 	displayName := businessProfileNodeName(node)
-	verifiedName := ""
+	verifiedName := businessVerifiedNodeName(node)
 	if node.Tag == "verified_name" {
-		verifiedName = businessNodeName(node)
-	} else if verifiedNode, ok := findChatdNode(node, "verified_name"); ok {
-		verifiedName = businessNodeName(verifiedNode)
+		verifiedName = firstNonEmpty(verifiedName, businessNodeName(node))
 	}
 	displayName = firstNonEmpty(displayName, verifiedName)
 	if displayName == "" {

@@ -68,7 +68,7 @@ function ContactRow({ accountID, contact, selected, deleting, onOpenContact, onD
         </span>
         <span className="grid justify-items-end gap-1">
           <time className="text-[11px] text-muted-foreground">{formatChatTime(contact.lastAt)}</time>
-          {unread ? <Badge variant="default">{contact.unreadCount}</Badge> : contact.count > 0 ? <span className="text-[11px] text-muted-foreground">{contact.count}</span> : null}
+          {unread && <Badge variant="default">{contact.unreadCount}</Badge>}
         </span>
       </NavLink>
       {deleteVisible && <button className="mr-2 grid size-8 place-items-center rounded-full text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive disabled:opacity-50" type="button" title="删除联系人" aria-label="删除联系人" disabled={deleting} onClick={() => onDeleteContact(contact.id)}>{deleting ? <Loader2 className="size-4 animate-spin" /> : <Trash2 size={14} />}</button>}

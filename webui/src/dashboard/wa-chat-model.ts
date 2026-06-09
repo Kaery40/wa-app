@@ -23,7 +23,6 @@ export type WaContact = {
   title: string;
   subtitle: string;
   kind: WAContactKind;
-  count: number;
   unreadCount: number;
   preview: string;
   lastAt?: Date;
@@ -42,7 +41,7 @@ export function buildWaContacts(events: WaChatEvent[], records: WAContactRecord[
   for (const record of records) {
     const id = recordContactID(record);
     if (!id) continue;
-    contacts.set(id, { id, title: recordTitle(record), subtitle: recordSubtitle(record), kind: record.kind || WAContactKind.WA_CONTACT_KIND_UNSPECIFIED, count: record.message_count || 0, unreadCount: record.unread_count || 0, preview: record.last_message_preview || '', lastAt: parseDate(record.last_message_at) || parseDate(record.audit?.updated_at), profilePictureURL: contactProfilePictureURL(record), statsFromRecord: true });
+    contacts.set(id, { id, title: recordTitle(record), subtitle: recordSubtitle(record), kind: record.kind || WAContactKind.WA_CONTACT_KIND_UNSPECIFIED, unreadCount: record.unread_count || 0, preview: record.last_message_preview || '', lastAt: parseDate(record.last_message_at) || parseDate(record.audit?.updated_at), profilePictureURL: contactProfilePictureURL(record), statsFromRecord: true });
   }
   for (const event of events) {
     const current = contacts.get(event.contactID);
@@ -52,7 +51,6 @@ export function buildWaContacts(events: WaChatEvent[], records: WAContactRecord[
       title: current?.title || event.sender,
       subtitle: current?.subtitle || event.source,
       kind: current?.kind || WAContactKind.WA_CONTACT_KIND_UNSPECIFIED,
-      count: keepRecordStats ? current?.count || 0 : (current?.count || 0) + 1,
       unreadCount: keepRecordStats ? current?.unreadCount || 0 : (current?.unreadCount || 0) + (isUnreadChatEvent(event) ? 1 : 0),
       preview: current?.preview || event.text,
       lastAt: newerDate(current?.lastAt, event.at),
@@ -124,11 +122,14 @@ function contactProfilePictureURL(record: WAContactRecord) {
 }
 
 function recordTitle(record: WAContactRecord) {
-  return safeContactName(record.display_name) || record.verified_name || record.wa_name || phoneTitle(record.number) || sourcePartyLabel(record.jid) || '未知联系人';
+  const name = firstContactName(record);
+  if (record.kind === WAContactKind.WA_CONTACT_KIND_BUSINESS) return name && !isPhoneFallbackName(name) ? name : '企业联系人';
+  return name || phoneTitle(record.number) || sourcePartyLabel(record.jid) || '未知联系人';
 }
 
 function recordSubtitle(record: WAContactRecord) {
   if (record.kind === WAContactKind.WA_CONTACT_KIND_SYSTEM) return '';
+  if (record.kind === WAContactKind.WA_CONTACT_KIND_BUSINESS) return '';
   if (record.number) return `+${record.number}`;
   if (record.jid?.endsWith('@lid')) return 'WA 联系人';
   return sourcePartyLabel(record.jid);
@@ -160,6 +161,14 @@ function safeContactName(value?: string) {
   const name = (value || '').trim();
   if (!name || name === '未知联系人' || name.startsWith('LID ') || name.startsWith('企业账号 ')) return '';
   return name;
+}
+
+function firstContactName(record: WAContactRecord) {
+  return safeContactName(record.display_name) || safeContactName(record.verified_name) || safeContactName(record.wa_name);
+}
+
+function isPhoneFallbackName(value: string) {
+  return /^\+?\d{6,}$/.test(value) || /^联系人 \+?\d{6,}$/.test(value);
 }
 
 function phoneTitle(number?: string) {

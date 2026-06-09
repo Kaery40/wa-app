@@ -34,18 +34,18 @@ export function WaChatThread({ account, connection, contact, events, loading, er
 
 function ChatHeader({ account, contact, connection, loading, events, actionBusy, onMarkRead }: { account: WAAccount; contact?: WaContact; connection?: LongConnectionState; loading: boolean; events: WaChatEvent[]; actionBusy?: boolean; onMarkRead: () => void }) {
   const unreadCount = events.filter(isUnreadChatEvent).length;
+  const subtitle = contact ? contact.subtitle : waAccountTitle(account);
   return (
     <header className="flex h-16 items-center justify-between gap-3 border-b border-border px-5">
       <div className="flex min-w-0 items-center gap-3">
         <span className="grid size-10 place-items-center rounded-full bg-emerald-50"><WhatsAppIcon className="size-7" /></span>
         <div className="min-w-0">
           <h2 className="truncate text-sm font-semibold">{contact?.title || '暂无联系人'}</h2>
-          <p className="truncate text-xs text-muted-foreground">{contact?.subtitle || waAccountTitle(account)}</p>
+          <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
         </div>
       </div>
       <div className="flex items-center gap-2">
         <WaConnectionDot connection={connection} loading={loading} />
-        {contact && <Badge variant="outline">{contact.count}</Badge>}
         <Button size="sm" variant="ghost" disabled={!contact || actionBusy || unreadCount === 0} onClick={onMarkRead} title="标记已读"><CheckCheck size={15} />{unreadCount > 0 ? unreadCount : ''}</Button>
         {loading && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
         <Link className="inline-flex size-9 items-center justify-center rounded-lg transition hover:bg-muted" to={waAccountPath(waAccountID(account))} title="账号信息" aria-label="账号信息"><Info size={16} /></Link>

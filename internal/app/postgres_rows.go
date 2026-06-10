@@ -159,17 +159,18 @@ func (r clientProfileRow) toProto() *waappv1.ClientProfile {
 }
 
 type verificationRow struct {
-	id               string
-	waAccountIDValue string
-	clientProfileID  string
-	method           string
-	status           string
-	length           int32
-	errCode          string
-	errMessage       string
-	errRetryable     bool
-	requestedAt      time.Time
-	expiresAt        sql.NullTime
+	id                string
+	waAccountIDValue  string
+	clientProfileID   string
+	method            string
+	status            string
+	length            int32
+	retryAfterSeconds int64
+	errCode           string
+	errMessage        string
+	errRetryable      bool
+	requestedAt       time.Time
+	expiresAt         sql.NullTime
 }
 
 func (r verificationRow) toProto() *waappv1.VerificationCodeRequestRecord {
@@ -180,6 +181,7 @@ func (r verificationRow) toProto() *waappv1.VerificationCodeRequestRecord {
 		DeliveryMethod:        waappv1.VerificationDeliveryMethod(waappv1.VerificationDeliveryMethod_value[r.method]),
 		Status:                waappv1.VerificationRequestStatus(waappv1.VerificationRequestStatus_value[r.status]),
 		ExpectedCodeLength:    r.length,
+		RetryAfter:            durationFromSeconds(r.retryAfterSeconds),
 		RequestedAt:           timestamppb.New(r.requestedAt.UTC()),
 		ExpiresAt:             sqlTime(r.expiresAt),
 		LastError:             protoError(r.errCode, r.errMessage, r.errRetryable),

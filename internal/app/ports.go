@@ -214,6 +214,7 @@ type EngineCodeResult struct {
 	Status             waappv1.VerificationRequestStatus
 	ExpectedCodeLength int32
 	ExpiresAt          time.Time
+	RetryAfter         time.Duration
 	Err                error
 }
 

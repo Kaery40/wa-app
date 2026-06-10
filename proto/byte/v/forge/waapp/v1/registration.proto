@@ -101,6 +101,7 @@ message VerificationCodeRequestRecord {
   google.protobuf.Timestamp requested_at = 7;
   google.protobuf.Timestamp expires_at = 8;
   WaError last_error = 9;
+  google.protobuf.Duration retry_after = 10;
 }
 
 message RegisteredIdentity {

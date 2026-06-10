@@ -252,17 +252,17 @@ ON CONFLICT (account_probe_id) DO UPDATE SET status=EXCLUDED.status, supported_m
 
 func (s *PostgresStore) SaveVerificationRequest(ctx context.Context, record *waappv1.VerificationCodeRequestRecord) error {
 	appErr := errorFromProto(record.GetLastError())
-	_, err := s.pool.Exec(ctx, `INSERT INTO wa_verification_requests (verification_request_id, wa_account_id, client_profile_id, delivery_method, status, expected_code_length, last_error_code, last_error_message, last_error_retryable, requested_at, expires_at)
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-ON CONFLICT (verification_request_id) DO UPDATE SET status=EXCLUDED.status, expected_code_length=EXCLUDED.expected_code_length, last_error_code=EXCLUDED.last_error_code, last_error_message=EXCLUDED.last_error_message, last_error_retryable=EXCLUDED.last_error_retryable, expires_at=EXCLUDED.expires_at`,
-		record.GetVerificationRequestId(), record.GetWaAccountId(), record.GetClientProfileId(), record.GetDeliveryMethod().String(), record.GetStatus().String(), record.GetExpectedCodeLength(), errCode(appErr), errMessage(appErr), errRetryable(appErr), timeFromProto(record.GetRequestedAt()), nullableProtoTime(record.GetExpiresAt()))
+	_, err := s.pool.Exec(ctx, `INSERT INTO wa_verification_requests (verification_request_id, wa_account_id, client_profile_id, delivery_method, status, expected_code_length, retry_after_seconds, last_error_code, last_error_message, last_error_retryable, requested_at, expires_at)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+ON CONFLICT (verification_request_id) DO UPDATE SET status=EXCLUDED.status, expected_code_length=EXCLUDED.expected_code_length, retry_after_seconds=EXCLUDED.retry_after_seconds, last_error_code=EXCLUDED.last_error_code, last_error_message=EXCLUDED.last_error_message, last_error_retryable=EXCLUDED.last_error_retryable, expires_at=EXCLUDED.expires_at`,
+		record.GetVerificationRequestId(), record.GetWaAccountId(), record.GetClientProfileId(), record.GetDeliveryMethod().String(), record.GetStatus().String(), record.GetExpectedCodeLength(), durationSeconds(record.GetRetryAfter()), errCode(appErr), errMessage(appErr), errRetryable(appErr), timeFromProto(record.GetRequestedAt()), nullableProtoTime(record.GetExpiresAt()))
 	return err
 }
 
 func (s *PostgresStore) GetVerificationRequest(ctx context.Context, id string) (*waappv1.VerificationCodeRequestRecord, error) {
-	row := s.pool.QueryRow(ctx, `SELECT verification_request_id,wa_account_id,client_profile_id,delivery_method,status,expected_code_length,last_error_code,last_error_message,last_error_retryable,requested_at,expires_at FROM wa_verification_requests WHERE verification_request_id=$1`, id)
+	row := s.pool.QueryRow(ctx, `SELECT verification_request_id,wa_account_id,client_profile_id,delivery_method,status,expected_code_length,retry_after_seconds,last_error_code,last_error_message,last_error_retryable,requested_at,expires_at FROM wa_verification_requests WHERE verification_request_id=$1`, id)
 	var r verificationRow
-	if err := row.Scan(&r.id, &r.waAccountIDValue, &r.clientProfileID, &r.method, &r.status, &r.length, &r.errCode, &r.errMessage, &r.errRetryable, &r.requestedAt, &r.expiresAt); err != nil {
+	if err := row.Scan(&r.id, &r.waAccountIDValue, &r.clientProfileID, &r.method, &r.status, &r.length, &r.retryAfterSeconds, &r.errCode, &r.errMessage, &r.errRetryable, &r.requestedAt, &r.expiresAt); err != nil {
 		return nil, notFound(err, waappv1.WaErrorCode_WA_ERROR_CODE_REGISTRATION_NOT_FOUND, "verification request not found")
 	}
 	return r.toProto(), nil

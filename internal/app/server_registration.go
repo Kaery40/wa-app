@@ -281,5 +281,6 @@ func (s *Server) newVerificationCodeRequestRecord(account *waappv1.WAAccount, pr
 		RequestedAt:           timestamppb.New(now),
 		ExpiresAt:             defaultExpiry(now, timestamp(result.ExpiresAt)),
 		LastError:             ToProtoError(result.Err),
+		RetryAfter:            durationToProto(result.RetryAfter),
 	}
 }

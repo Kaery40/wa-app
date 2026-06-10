@@ -32,3 +32,6 @@
 2. 回归 `2.26.22.78` UA + fresh WAMSYS 后的 `/v2/code` blocked 命中率。
 3. 对仍 blocked 的样本保留脱敏响应元数据：阶段、status、reason、param、HTTP code、是否 iOS 同号成功、同出口是否成功。
 4. 若仍 blocked，再把 `StartRegistration` 改成 `exist -> code -> register` 并补 App 边带 client_log / pre-chatd AB。
+## too_recent 冷却返回
+
+`/v2/code` 的 `too_recent` 不是号码封禁；App 响应可能携带 `sms_wait` / `retry_after` / `send_sms_wait` 等冷却字段。运行态现在会把这类响应归一为 `VERIFICATION_REQUEST_STATUS_WAITING`，并在 `VerificationCodeRequestRecord.retry_after` 与 action JSON `retry_after_seconds` 中透出冷却秒数；`StartRegistration` 会返回 `registration_phase=OTP_COOLDOWN`。

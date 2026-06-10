@@ -143,17 +143,24 @@ func (e *NativeEngine) requestVerificationCodeWithState(ctx context.Context, inp
 	if enc != "" {
 		state.LastCodeResult["enc_sha256"] = encHash(enc)
 	}
+	retryAfter := verificationCodeRetryAfter(data)
+	now := e.clock.Now()
 	if err != nil {
+		if verificationCodeRateLimited(data) {
+			return verificationCodeResult(waappv1.VerificationRequestStatus_VERIFICATION_REQUEST_STATUS_WAITING, data, now, retryAfter), state
+		}
 		return EngineCodeResult{Status: waappv1.VerificationRequestStatus_VERIFICATION_REQUEST_STATUS_REJECTED, Err: classifyHTTPError(data, err)}, state
 	}
 	status := waappv1.VerificationRequestStatus_VERIFICATION_REQUEST_STATUS_WAITING
 	s := responseStatus(data)
 	if s == "sent" || s == "ok" {
 		status = waappv1.VerificationRequestStatus_VERIFICATION_REQUEST_STATUS_SENT
-	} else if s != "" && s != "too_recent" {
+	} else if verificationCodeRateLimited(data) {
+		status = waappv1.VerificationRequestStatus_VERIFICATION_REQUEST_STATUS_WAITING
+	} else if s != "" {
 		return EngineCodeResult{Status: waappv1.VerificationRequestStatus_VERIFICATION_REQUEST_STATUS_REJECTED, Err: waProtocolError(data, "verification request was rejected")}, state
 	}
-	return EngineCodeResult{Status: status, ExpectedCodeLength: int32(jsonNumber(data["length"])), ExpiresAt: e.clock.Now().Add(10 * time.Minute)}, state
+	return verificationCodeResult(status, data, now, retryAfter), state
 }
 
 func (e *NativeEngine) SubmitVerificationCode(ctx context.Context, input EngineSubmitInput) EngineRegisterResult {
@@ -689,6 +696,36 @@ func sanitizeResponse(data map[string]any) map[string]any {
 		out[key] = value
 	}
 	return out
+}
+
+func verificationCodeResult(status waappv1.VerificationRequestStatus, data map[string]any, now time.Time, retryAfter time.Duration) EngineCodeResult {
+	return EngineCodeResult{
+		Status:             status,
+		ExpectedCodeLength: int32(jsonNumber(data["length"])),
+		ExpiresAt:          now.Add(10 * time.Minute),
+		RetryAfter:         retryAfter,
+	}
+}
+
+func verificationCodeRateLimited(data map[string]any) bool {
+	switch responseStatus(data) {
+	case "too_recent", "too_many", "temporarily_unavailable":
+		return true
+	}
+	switch responseReason(data) {
+	case "too_recent", "too_many", "temporarily_unavailable":
+		return true
+	default:
+		return false
+	}
+}
+
+func verificationCodeRetryAfter(data map[string]any) time.Duration {
+	seconds := verificationSMSCooldownSeconds(data)
+	if seconds <= 0 {
+		return 0
+	}
+	return time.Duration(seconds) * time.Second
 }
 
 func classifyHTTPError(data map[string]any, err error) error {

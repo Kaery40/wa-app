@@ -188,13 +188,17 @@ func (g *actionGateway) requestSMSOTP(ctx context.Context, payload map[string]an
 			return nil, err
 		}
 	}
-	return map[string]any{
+	response := map[string]any{
 		"success":                 record.GetStatus() == waappv1.VerificationRequestStatus_VERIFICATION_REQUEST_STATUS_SENT || record.GetStatus() == waappv1.VerificationRequestStatus_VERIFICATION_REQUEST_STATUS_WAITING,
 		"status":                  record.GetStatus().String(),
 		"verification_request_id": record.GetVerificationRequestId(),
 		"verification_request":    protoMap(record),
 		"proxy":                   registrationProxyRouteMap(route, managedRoute),
-	}, nil
+	}
+	if seconds := durationSeconds(record.GetRetryAfter()); seconds > 0 {
+		response["retry_after_seconds"] = seconds
+	}
+	return response, nil
 }
 
 func (g *actionGateway) awaitOTP(ctx context.Context, payload map[string]any) (map[string]any, error) {

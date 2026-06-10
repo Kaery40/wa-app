@@ -66,7 +66,7 @@ func (s *Server) StartRegistration(ctx context.Context, payload map[string]any) 
 		_ = gateway.discardRejectedRegistration(context.Background(), basePayload, waAccountID(account), verificationRequestID)
 		return nil, err
 	}
-	return map[string]any{
+	response := map[string]any{
 		"success":                 true,
 		"status":                  record.GetStatus().String(),
 		"error_message":           "",
@@ -76,11 +76,15 @@ func (s *Server) StartRegistration(ctx context.Context, payload map[string]any) 
 		"protocol_profile_id":     protocol.GetProtocolProfileId(),
 		"verification_request_id": verificationRequestID,
 		"verification_request":    protoMap(record),
-		"registration_phase":      registrationPhase(true, verificationRequestID),
+		"registration_phase":      registrationPhase(true, verificationRequestID, durationFromProto(record.GetRetryAfter())),
 		"fingerprint_persistence": "COMMITTED",
 		"persisted":               true,
 		"proxy":                   registrationOrchestratorProxySummary(registrationProxyRouteMap(route, managedRoute)),
-	}, nil
+	}
+	if seconds := durationSeconds(record.GetRetryAfter()); seconds > 0 {
+		response["retry_after_seconds"] = seconds
+	}
+	return response, nil
 }
 
 func cloneActionPayload(payload map[string]any) map[string]any {
@@ -91,11 +95,14 @@ func cloneActionPayload(payload map[string]any) map[string]any {
 	return cloned
 }
 
-func registrationPhase(success bool, verificationRequestID string) string {
-	if success && strings.TrimSpace(verificationRequestID) != "" {
-		return "OTP_WAITING"
+func registrationPhase(success bool, verificationRequestID string, retryAfter time.Duration) string {
+	if !success || strings.TrimSpace(verificationRequestID) == "" {
+		return "OTP_REQUEST_FAILED"
 	}
-	return "OTP_REQUEST_FAILED"
+	if retryAfter > 0 {
+		return "OTP_COOLDOWN"
+	}
+	return "OTP_WAITING"
 }
 
 func verificationCodeRequestAccepted(result EngineCodeResult) bool {
@@ -104,13 +111,17 @@ func verificationCodeRequestAccepted(result EngineCodeResult) bool {
 
 func registrationRequestFailureMap(result EngineCodeResult, route DynamicProxyRoute, managedRoute bool) map[string]any {
 	protoErr := ToProtoError(result.Err)
-	return map[string]any{
+	response := map[string]any{
 		"success":       false,
 		"status":        firstNonEmpty(result.Status.String(), "VERIFICATION_REQUEST_STATUS_REJECTED"),
 		"error":         protoMap(protoErr),
 		"error_message": protoErr.GetMessage(),
 		"proxy":         registrationProxyRouteMap(route, managedRoute),
 	}
+	if seconds := int64(result.RetryAfter / time.Second); seconds > 0 {
+		response["retry_after_seconds"] = seconds
+	}
+	return response
 }
 
 func (g *actionGateway) discardRejectedRegistration(ctx context.Context, basePayload map[string]any, waAccountID string, verificationRequestID string) error {

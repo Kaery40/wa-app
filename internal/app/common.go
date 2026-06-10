@@ -160,3 +160,25 @@ func durationFromProto(value *durationpb.Duration) time.Duration {
 	}
 	return value.AsDuration()
 }
+
+func durationToProto(value time.Duration) *durationpb.Duration {
+	if value <= 0 {
+		return nil
+	}
+	return durationpb.New(value)
+}
+
+func durationSeconds(value *durationpb.Duration) int64 {
+	duration := durationFromProto(value)
+	if duration <= 0 {
+		return 0
+	}
+	return int64(duration / time.Second)
+}
+
+func durationFromSeconds(seconds int64) *durationpb.Duration {
+	if seconds <= 0 {
+		return nil
+	}
+	return durationpb.New(time.Duration(seconds) * time.Second)
+}

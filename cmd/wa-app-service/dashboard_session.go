@@ -19,7 +19,6 @@ const (
 
 type dashboardSessionClaims struct {
 	Version   string `json:"v"`
-	Username  string `json:"u"`
 	ExpiresAt int64  `json:"exp"`
 	Nonce     string `json:"n"`
 }
@@ -30,7 +29,7 @@ func authenticatedDashboardSessionRequest(r *http.Request, auth dashboardAuthCon
 		return false
 	}
 	claims, ok := parseDashboardSessionToken(cookie.Value, auth)
-	return ok && claims.Version == "1" && secureEqualString(claims.Username, auth.username) && claims.ExpiresAt > time.Now().Unix()
+	return ok && claims.Version == "1" && claims.ExpiresAt > time.Now().Unix()
 }
 
 func newDashboardSessionCookie(r *http.Request, auth dashboardAuthConfig) (*http.Cookie, error) {
@@ -68,7 +67,7 @@ func newDashboardSessionToken(auth dashboardAuthConfig) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	payload, err := json.Marshal(dashboardSessionClaims{Version: "1", Username: auth.username, ExpiresAt: time.Now().Add(dashboardSessionDuration).Unix(), Nonce: nonce})
+	payload, err := json.Marshal(dashboardSessionClaims{Version: "1", ExpiresAt: time.Now().Add(dashboardSessionDuration).Unix(), Nonce: nonce})
 	if err != nil {
 		return "", err
 	}
@@ -103,7 +102,7 @@ func signDashboardSessionPayload(payload []byte, auth dashboardAuthConfig) []byt
 }
 
 func dashboardSessionKey(auth dashboardAuthConfig) []byte {
-	sum := sha256.Sum256([]byte("wa-app-dashboard-session\x00" + auth.username + "\x00" + auth.password))
+	sum := sha256.Sum256([]byte("wa-app-dashboard-session\x00" + auth.password))
 	return sum[:]
 }
 

@@ -3,33 +3,21 @@ package main
 import (
 	"crypto/sha256"
 	"crypto/subtle"
-	"errors"
 	"net/http"
 	"net/url"
 	"strings"
 )
 
 type dashboardAuthConfig struct {
-	username string
 	password string
 }
 
-var errIncompleteDashboardAuth = errors.New("WA_APP_AUTH_USERNAME and WA_APP_AUTH_PASSWORD must be configured together")
-
-func newDashboardAuthConfig(username string, password string) (dashboardAuthConfig, error) {
-	username = strings.TrimSpace(username)
-	password = strings.TrimSpace(password)
-	if username == "" && password == "" {
-		return dashboardAuthConfig{}, nil
-	}
-	if username == "" || password == "" {
-		return dashboardAuthConfig{}, errIncompleteDashboardAuth
-	}
-	return dashboardAuthConfig{username: username, password: password}, nil
+func newDashboardAuthConfig(password string) dashboardAuthConfig {
+	return dashboardAuthConfig{password: strings.TrimSpace(password)}
 }
 
 func (c dashboardAuthConfig) enabled() bool {
-	return c.username != "" && c.password != ""
+	return c.password != ""
 }
 
 func withOptionalDashboardAuth(next http.Handler, auth dashboardAuthConfig) http.Handler {
@@ -92,12 +80,12 @@ func authenticatedDashboardRequest(r *http.Request, auth dashboardAuthConfig) bo
 }
 
 func authenticatedDashboardBasicRequest(r *http.Request, auth dashboardAuthConfig) bool {
-	username, password, ok := r.BasicAuth()
-	return ok && validDashboardCredentials(username, password, auth)
+	_, password, ok := r.BasicAuth()
+	return ok && validDashboardPassword(password, auth)
 }
 
-func validDashboardCredentials(username string, password string, auth dashboardAuthConfig) bool {
-	return secureEqualString(strings.TrimSpace(username), auth.username) && secureEqualString(password, auth.password)
+func validDashboardPassword(password string, auth dashboardAuthConfig) bool {
+	return secureEqualString(strings.TrimSpace(password), auth.password)
 }
 
 func secureEqualString(left string, right string) bool {

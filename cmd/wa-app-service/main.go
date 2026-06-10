@@ -49,10 +49,7 @@ func main() {
 	}
 	service := app.NewServer(store, runtime, engine, clock, ids)
 	service.SetStaticProxyURLs(cfg.CommonProxy, cfg.NumberProbeProxy, cfg.RegistrationProxy)
-	authConfig, err := newDashboardAuthConfig(cfg.DashboardAuthUser, cfg.DashboardAuthPass)
-	if err != nil {
-		log.Fatalf("initialize wa-app dashboard auth: %v", err)
-	}
+	authConfig := newDashboardAuthConfig(cfg.DashboardAuthPass)
 	listener, err := net.Listen("tcp", cfg.ListenAddr)
 	if err != nil {
 		log.Fatalf("listen %s: %v", cfg.ListenAddr, err)

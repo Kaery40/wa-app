@@ -38,8 +38,8 @@ func handleDashboardLoginPost(w http.ResponseWriter, r *http.Request, auth dashb
 		return
 	}
 	next = dashboardSafeRedirectTarget(r.FormValue("next"))
-	if !validDashboardCredentials(r.FormValue("username"), r.FormValue("password"), auth) {
-		renderDashboardLogin(w, http.StatusUnauthorized, next, "用户名或密码不正确")
+	if !validDashboardPassword(r.FormValue("password"), auth) {
+		renderDashboardLogin(w, http.StatusUnauthorized, next, "密码不正确")
 		return
 	}
 	cookie, err := newDashboardSessionCookie(r, auth)
@@ -80,12 +80,11 @@ const dashboardLoginHTML = `<!doctype html>
 </head>
 <body>
 <main>
-  <div class="brand"><div class="mark">WA</div><div><h1 class="title">登录 WA 管理</h1><p class="sub">登录状态会在当前浏览器保留 7 天</p></div></div>
+  <div class="brand"><div class="mark">WA</div><div><h1 class="title">登录 WA 管理</h1><p class="sub">输入访问密码，登录状态保留 7 天</p></div></div>
   {{if .Error}}<p class="error">{{.Error}}</p>{{end}}
   <form method="post" action="/login" autocomplete="on">
     <input type="hidden" name="next" value="{{.Next}}">
-    <label>用户名<input name="username" autocomplete="username" required autofocus></label>
-    <label>密码<input name="password" type="password" autocomplete="current-password" required></label>
+    <label>访问密码<input name="password" type="password" autocomplete="current-password" required autofocus></label>
     <button type="submit">登录</button>
     <p class="hint">关闭浏览器后仍会保持登录；如需退出可访问 <code>/logout</code>。</p>
   </form>

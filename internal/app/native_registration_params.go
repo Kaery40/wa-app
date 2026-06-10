@@ -116,6 +116,9 @@ func registrationMethodFromName(name string) waappv1.VerificationDeliveryMethod 
 
 func applyNativeRawParamMap(params map[string]string, raw map[string]struct{}, values map[string]string, omitEmptyOperator bool) {
 	for key, value := range values {
+		if isOpaqueWamsysMapKey(key) {
+			continue
+		}
 		if omitEmptyOperator && omitEmptyNativeOperatorField(key, value) {
 			continue
 		}
@@ -192,6 +195,9 @@ func registerDeviceMap(method string, state nativeState, token string) map[strin
 func nativeDeviceMapFields(state nativeState) map[string]string {
 	fields := map[string]string{}
 	for key, value := range state.Profile.AdditionalMapFields {
+		if isOpaqueWamsysMapKey(key) {
+			continue
+		}
 		fields[key] = value
 	}
 	defaults := map[string]string{

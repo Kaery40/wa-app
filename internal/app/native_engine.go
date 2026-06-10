@@ -30,6 +30,7 @@ type NativeEngine struct {
 	http           *nativeHTTPClient
 	clock          Clock
 	ids            IDGenerator
+	wamsys         wamsysMaterialProvider
 }
 
 func NewNativeEngine(stateStore NativeStateStore, clock Clock, ids IDGenerator) (*NativeEngine, error) {
@@ -46,7 +47,7 @@ func NewNativeEngine(stateStore NativeStateStore, clock Clock, ids IDGenerator) 
 	if err != nil {
 		return nil, err
 	}
-	return &NativeEngine{stateStore: stateStore, http: hc, clock: clock, ids: ids}, nil
+	return &NativeEngine{stateStore: stateStore, http: hc, clock: clock, ids: ids, wamsys: captureWamsysMaterialProvider{}}, nil
 }
 
 func (e *NativeEngine) WithProxyURL(proxyURL string) (*NativeEngine, error) {
@@ -58,7 +59,14 @@ func (e *NativeEngine) WithProxyURL(proxyURL string) (*NativeEngine, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &NativeEngine{stateStore: e.stateStore, activeProxyURL: proxyURL, http: hc, clock: e.clock, ids: e.ids}, nil
+	return &NativeEngine{stateStore: e.stateStore, activeProxyURL: proxyURL, http: hc, clock: e.clock, ids: e.ids, wamsys: e.wamsysProvider()}, nil
+}
+
+func (e *NativeEngine) wamsysProvider() wamsysMaterialProvider {
+	if e != nil && e.wamsys != nil {
+		return e.wamsys
+	}
+	return captureWamsysMaterialProvider{}
 }
 
 func (e *NativeEngine) CloseIdleConnections() {

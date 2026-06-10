@@ -160,7 +160,6 @@ func (e *NativeEngine) ImportWamsysCapture(ctx context.Context, req *waappv1.Imp
 }
 
 func (e *NativeEngine) BuildRegistrationRequest(ctx context.Context, req *waappv1.BuildRegistrationRequestRequest) (*waappv1.BuildRegistrationRequestResponse, error) {
-	_ = ctx
 	params := orderedParams{}
 	rawKeys := map[string]struct{}{}
 	phone := normalizePhone(req.GetPhone())
@@ -235,7 +234,11 @@ func (e *NativeEngine) BuildRegistrationRequest(ctx context.Context, req *waappv
 	if req.GetKind() != waappv1.RegistrationRequestKind_REGISTRATION_REQUEST_KIND_EXIST {
 		params.set("method", firstNonEmpty(params.get("method"), methodName), false)
 	}
-	applyWamsysToParams(&params, rawKeys, req.GetWamsysCapture(), req.GetApplyWamsysScalars(), req.GetIncludeWamsysMap(), req.GetIncludeWamsysIdBackup())
+	wamsysCapture, err := e.wamsysProvider().RegistrationMaterial(ctx, wamsysMaterialInput{Capture: req.GetWamsysCapture()})
+	if err != nil {
+		return nil, err
+	}
+	applyWamsysToParams(&params, rawKeys, wamsysCapture, req.GetApplyWamsysScalars(), req.GetIncludeWamsysMap(), req.GetIncludeWamsysIdBackup())
 	for _, item := range req.GetExtraParams() {
 		value := sensitiveInput(item.GetValue())
 		params.set(item.GetKey(), value, item.GetRawPercentEncoded())
@@ -388,6 +391,9 @@ func applyNativeProfileParams(params *orderedParams, rawKeys map[string]struct{}
 	if includeMap {
 		keys := make([]string, 0, len(profile.AdditionalMapFields))
 		for key := range profile.AdditionalMapFields {
+			if isOpaqueWamsysMapKey(key) {
+				continue
+			}
 			keys = append(keys, key)
 		}
 		sort.Strings(keys)
@@ -400,6 +406,9 @@ func applyNativeProfileParams(params *orderedParams, rawKeys map[string]struct{}
 
 func applyNativeRawMapParams(params *orderedParams, rawKeys map[string]struct{}, values map[string]string, omitEmptyOperator bool) {
 	for key, value := range values {
+		if isOpaqueWamsysMapKey(key) {
+			continue
+		}
 		if omitEmptyOperator && omitEmptyNativeOperatorField(key, value) {
 			continue
 		}
@@ -457,6 +466,9 @@ func phoneProfileToProto(phone *waappv1.PhoneTarget, profile nativePhoneProfile)
 	raw := map[string]string{"id": profile.ID, "id_hex": profile.IDHex, "backup_token": profile.BackupToken, "backup_token_hex": profile.BackupTokenHex}
 	device := map[string]string{}
 	for key, value := range profile.AdditionalMapFields {
+		if isOpaqueWamsysMapKey(key) {
+			continue
+		}
 		device[key] = value
 	}
 	canonical, _ := json.Marshal(struct {

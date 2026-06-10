@@ -442,7 +442,7 @@ func (s *dashboardHTTP) handleContactProfilePicture(w http.ResponseWriter, r *ht
 }
 
 func writeProfilePictureNotFound(w http.ResponseWriter) {
-	w.Header().Set("Cache-Control", "private, max-age=300")
+	w.Header().Set("Cache-Control", "private, max-age=30")
 	w.WriteHeader(http.StatusNotFound)
 }
 

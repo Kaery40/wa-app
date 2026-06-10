@@ -1,5 +1,5 @@
 import type { MouseEvent } from 'react';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Loader2, Search, Trash2 } from 'lucide-react';
 import { NavLink } from 'react-router';
 import { WAContactKind } from '../proto/byte/v/forge/waapp/v1/contacts';
@@ -81,8 +81,13 @@ function ContactRow({ accountID, contact, selected, deleting, onOpenContact, onD
 
 function ContactAvatar({ contact }: { contact: WaContact }) {
   const [failedURL, setFailedURL] = useState('');
-  if (contact.profilePictureURL && failedURL !== contact.profilePictureURL) {
-    return <img className="size-10 rounded-full object-cover" src={contact.profilePictureURL} alt={contact.title} loading="lazy" onError={() => setFailedURL(contact.profilePictureURL || '')} />;
+  const pictureURL = contact.profilePictureURL || '';
+
+  useEffect(() => {
+    setFailedURL('');
+  }, [pictureURL]);
+  if (pictureURL && failedURL !== pictureURL) {
+    return <img className="size-10 rounded-full object-cover" src={pictureURL} alt={contact.title} loading="lazy" onError={() => setFailedURL(pictureURL)} />;
   }
   return <span className="grid size-10 place-items-center rounded-full bg-emerald-50"><WhatsAppIcon className="size-6" title={contact.title} /></span>;
 }

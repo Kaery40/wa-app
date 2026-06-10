@@ -103,7 +103,9 @@ func (s *Server) getWAAccountProfilePicture(ctx context.Context, selector *waapp
 		RemoteTimeout:        remoteTimeout,
 	})
 	if result.Err != nil {
-		s.cacheWAProfilePictureFailure(ctx, accountCacheKey)
+		if shouldCacheProfilePictureFailure(result.Err) {
+			s.cacheWAProfilePictureFailure(ctx, accountCacheKey)
+		}
 		logWAProfilePictureError("account", result.Err)
 		return WAContactProfilePicture{}, result.Err
 	}
@@ -152,7 +154,9 @@ func (s *Server) GetWAContactProfilePicture(ctx context.Context, contactID strin
 		RemoteTimeout:        remoteTimeout,
 	})
 	if result.Err != nil {
-		s.cacheWAProfilePictureFailure(ctx, contactCacheKey)
+		if shouldCacheProfilePictureFailure(result.Err) {
+			s.cacheWAProfilePictureFailure(ctx, contactCacheKey)
+		}
 		logWAProfilePictureError("contact", result.Err)
 		return WAContactProfilePicture{}, result.Err
 	}
@@ -237,6 +241,17 @@ func (s *Server) cacheWAProfilePictureFailure(ctx context.Context, key string) {
 
 func profilePictureFailureCacheKey(key string) string {
 	return key + ":failure"
+}
+
+func shouldCacheProfilePictureFailure(err error) bool {
+	var appErr *AppError
+	if !errors.As(err, &appErr) {
+		return false
+	}
+	if appErr == nil {
+		return false
+	}
+	return appErr.Code == waappv1.WaErrorCode_WA_ERROR_CODE_MESSAGE_NOT_FOUND
 }
 
 func (s *Server) deleteWAAccountProfilePictureCache(ctx context.Context, accountID string) {

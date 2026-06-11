@@ -23,10 +23,12 @@ docker compose pull
 docker compose up -d
 ```
 
-默认端口：
+默认端口（固定）：
 
-- Dashboard：`http://127.0.0.1:8080`
-- gRPC：`127.0.0.1:50091`
+- Dashboard：`http://127.0.0.1:8080`（`docker-compose.yml` 映射）
+- gRPC：`:50091`（容器内监听，默认不对外映射）
+
+若你确实要改主机映射端口，请直接改 `docker-compose.yml` 的 `ports` 行（非配置项）。
 
 ### 配置
 

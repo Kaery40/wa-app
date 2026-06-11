@@ -17,7 +17,6 @@ import {
   SidebarMenuItem,
   SidebarMenuSkeleton,
   SidebarRail,
-  SidebarSeparator,
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
@@ -59,8 +58,7 @@ export function WaAccountRail({ accounts, selectedID, avatarVersion, connections
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarSeparator />
-      <SidebarFooter>
+      <SidebarFooter className="border-t border-sidebar-border">
         <RailFooter selectedID={selectedID} />
       </SidebarFooter>
       <SidebarRail aria-label={expanded ? '收起账号栏' : '展开账号栏'} title={expanded ? '收起账号栏' : '展开账号栏'} />

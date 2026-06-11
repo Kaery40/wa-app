@@ -13,11 +13,14 @@ type Props = {
   account: WAAccount;
   onDone: (message: string) => void;
   onError: (message: string) => void;
+  onAccountChanged: () => void;
   onAvatarChanged: () => void;
 };
 
-export function WaAccountProfileSettings({ account, onDone, onError, onAvatarChanged }: Props) {
-  const [displayName, setDisplayName] = useState('');
+export function WaAccountProfileSettings({ account, onDone, onError, onAccountChanged, onAvatarChanged }: Props) {
+  const savedName = (account.display_name || '').trim();
+  const [currentName, setCurrentName] = useState(savedName);
+  const [displayName, setDisplayName] = useState(savedName);
   const [picture, setPicture] = useState<File | null>(null);
   const [activePicture, setActivePicture] = useState('');
   const [avatarVersion, setAvatarVersion] = useState('');
@@ -36,7 +39,13 @@ export function WaAccountProfileSettings({ account, onDone, onError, onAvatarCha
       if ([...name].length > 25) throw new Error('账号名称不能超过 25 个字符');
       return setWaAccountProfileName(account, name);
     },
-    onSuccess: () => onDone('账号名称设置请求已提交'),
+    onSuccess: () => {
+      const nextName = displayName.trim();
+      setCurrentName(nextName);
+      setDisplayName(nextName);
+      onAccountChanged();
+      onDone(currentName ? '名称已修改' : '名称已设置');
+    },
     onError: handleError,
   });
   const pictureMutation = useMutation({
@@ -60,14 +69,17 @@ export function WaAccountProfileSettings({ account, onDone, onError, onAvatarCha
   const pictureBusy = pictureMutation.isPending;
   const name = displayName.trim();
   const nameBusy = nameMutation.isPending;
+  const nameChanged = name !== currentName;
+  const nameAction = currentName ? '修改名称' : '设置名称';
   useEffect(() => {
-    setDisplayName('');
+    setCurrentName(savedName);
+    setDisplayName(savedName);
     setActivePicture('');
     setAvatarVersion('');
     setRemoteFailed(false);
     setPicture(null);
     if (fileInput.current) fileInput.current.value = '';
-  }, [accountID]);
+  }, [accountID, savedName]);
   return (
     <section className="grid gap-3">
       <div className="flex items-center gap-3">
@@ -77,7 +89,7 @@ export function WaAccountProfileSettings({ account, onDone, onError, onAvatarCha
         </Button>
         <form className="flex min-w-0 flex-1 items-center gap-2" onSubmit={(event) => submitName(event, () => nameMutation.mutate())}>
           <Input className="min-w-0 flex-1" value={displayName} maxLength={25} placeholder="账号名称" aria-label="账号名称" disabled={nameBusy} onChange={(event) => setDisplayName(event.target.value)} />
-          <Button className="h-10 w-10 px-0" type="submit" disabled={nameBusy || !name || [...name].length > 25} title="保存账号名称" aria-label="保存账号名称">
+          <Button className="h-10 w-10 px-0" type="submit" disabled={nameBusy || !name || !nameChanged || [...name].length > 25} title={nameAction} aria-label={nameAction}>
             {nameBusy ? <Loader2 className="size-4 animate-spin" /> : <Check size={16} />}
           </Button>
         </form>

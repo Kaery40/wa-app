@@ -131,6 +131,11 @@ func (s *Server) SetAccountProfileName(ctx context.Context, req *waappv1.SetAcco
 	if err != nil {
 		return &waappv1.SetAccountProfileNameResponse{Error: ToProtoError(err)}, nil
 	}
+	if op.GetError() == nil {
+		if err := s.saveAccountDisplayName(ctx, op.GetWaAccountId(), displayName, accountSettingsCompletedAt(op, s.clock.Now())); err != nil {
+			return &waappv1.SetAccountProfileNameResponse{Operation: op, Error: ToProtoError(err)}, nil
+		}
+	}
 	return &waappv1.SetAccountProfileNameResponse{Operation: op, Error: op.GetError()}, nil
 }
 
@@ -231,6 +236,26 @@ func (s *Server) queryAccountSettings(ctx context.Context, requestContext *waapp
 		LoginStateID:         loginState.GetLoginStateId(),
 		Kind:                 kind,
 	}), nil
+}
+
+func (s *Server) saveAccountDisplayName(ctx context.Context, accountID string, displayName string, updatedAt time.Time) error {
+	account, err := s.getWAAccount(ctx, accountID)
+	if err != nil {
+		return err
+	}
+	_, err = s.saveWAAccount(ctx, withWAAccountDisplayName(account, displayName, updatedAt))
+	return err
+}
+
+func accountSettingsCompletedAt(op *waappv1.AccountSettingsOperation, fallback time.Time) time.Time {
+	if op == nil {
+		return fallback
+	}
+	completedAt := timeFromProto(op.GetCompletedAt())
+	if completedAt.IsZero() {
+		return fallback
+	}
+	return completedAt
 }
 
 func (s *Server) accountSettingsRunner(ctx context.Context, requestContext *waappv1.RequestContext, kind waappv1.AccountSettingsOperationKind) (ProtocolEngine, func(), error) {

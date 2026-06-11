@@ -49,6 +49,7 @@ enum KeyMaterialStatus {
 
 message WAAccount {
   string wa_account_id = 1;
+  string display_name = 2;
   PhoneTarget phone = 3;
   WAAccountStatus status = 4;
   AuditStamp audit = 5;

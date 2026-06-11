@@ -501,7 +501,7 @@ func (s *Server) commitNativeState(ctx context.Context, phone *waappv1.PhoneTarg
 	account, err := s.store.FindWAAccountByPhone(ctx, phone.GetE164Number())
 	if err != nil {
 		now := s.clock.Now()
-		account = newWAAccount(s.ids.NewID("waacc_"), phone, waappv1.WAAccountStatus_WA_ACCOUNT_STATUS_PENDING_REGISTRATION, &waappv1.AuditStamp{CreatedAt: timestamppb.New(now), UpdatedAt: timestamppb.New(now)})
+		account = newWAAccount(s.ids.NewID("waacc_"), "", phone, waappv1.WAAccountStatus_WA_ACCOUNT_STATUS_PENDING_REGISTRATION, &waappv1.AuditStamp{CreatedAt: timestamppb.New(now), UpdatedAt: timestamppb.New(now)})
 		account, err = s.saveWAAccount(ctx, account)
 		if err != nil {
 			return nil, nil, nil, err

@@ -59,12 +59,12 @@ export function WaCreateAccountRoute() {
 
 export function WaAccountInfoRoute() {
   const account = useRouteAccount();
-  const { accounts, accountsLoading, deleting, deleteAccount, done, error, refreshAccountAvatars } = useWaContext();
+  const { accounts, accountsLoading, deleting, deleteAccount, done, error, refreshAccounts, refreshAccountAvatars } = useWaContext();
   const accountID = waAccountID(account);
   const profilesQuery = useQuery({ queryKey: waKeys.profiles(accountID), queryFn: () => getWaClientProfiles(accountID), enabled: Boolean(accountID), refetchInterval: 30000 });
   if (accountsLoading) return <PageCenter><LoadingText>加载账号...</LoadingText></PageCenter>;
   if (!account) return <AccountFallback accounts={accounts} />;
-  return <WaAccountInfoPage account={account} profiles={profilesQuery.data?.client_profiles || []} profilesLoading={profilesQuery.isLoading} busy={deleting} onDelete={deleteAccount} onDone={done} onError={error} onAvatarChanged={refreshAccountAvatars} />;
+  return <WaAccountInfoPage account={account} profiles={profilesQuery.data?.client_profiles || []} profilesLoading={profilesQuery.isLoading} busy={deleting} onDelete={deleteAccount} onDone={done} onError={error} onAccountChanged={() => { void refreshAccounts(); }} onAvatarChanged={refreshAccountAvatars} />;
 }
 
 export function WaInboxRoute() {

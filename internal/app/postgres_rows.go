@@ -110,18 +110,19 @@ func (r protocolProfileRow) toProto() *waappv1.ProtocolProfile {
 }
 
 type waAccountRow struct {
-	id        string
-	e164      string
-	cc        string
-	national  string
-	iso2      string
-	status    string
-	createdAt time.Time
-	updatedAt time.Time
+	id          string
+	displayName string
+	e164        string
+	cc          string
+	national    string
+	iso2        string
+	status      string
+	createdAt   time.Time
+	updatedAt   time.Time
 }
 
 func (r waAccountRow) toProto() *waappv1.WAAccount {
-	return newWAAccount(r.id, &waappv1.PhoneTarget{
+	return newWAAccount(r.id, r.displayName, &waappv1.PhoneTarget{
 		E164Number:         r.e164,
 		CountryCallingCode: r.cc,
 		NationalNumber:     r.national,

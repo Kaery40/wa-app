@@ -7,6 +7,7 @@ import { getWaTwoFactorAuthStatus, requestWaAccountEmailOtp, setWaAccountEmail, 
 import { Badge, type BadgeVariant, Button, Field, FieldGroup, FieldLabel, Input } from './ui';
 
 type Props = { account: WaAccountProjection; onDone: (message: string) => void; onError: (message: string) => void };
+type TwoFactorStatusView = { isPending: boolean; isError: boolean; data?: { status?: { configured?: boolean; email_configured?: boolean } } };
 
 export function WaAccountSecurityPanel({ account, onDone, onError }: Props) {
   const [pin, setPin] = useState('');
@@ -22,12 +23,16 @@ export function WaAccountSecurityPanel({ account, onDone, onError }: Props) {
     enabled: Boolean(waAccountID(account)),
     staleTime: 30_000,
   });
+  const pinConfigured = twoFactorConfigured(twoFactorStatus);
+  const emailConfigured = twoFactorEmailConfigured(twoFactorStatus);
+  const pinAction = pinConfigured ? '修改 2FA PIN' : '设置 2FA PIN';
+  const emailAction = emailConfigured ? '修改账户邮箱' : '设置账户邮箱';
   const twoFactor = useMutation({
     mutationFn: () => setWaTwoFactorAuthSettings(account, pin),
     onSuccess: (resp) => {
       setPin('');
       void twoFactorStatus.refetch();
-      handleSuccess('2FA PIN 设置请求已提交', resp.operation?.status);
+      handleSuccess(pinConfigured ? '2FA PIN 修改请求已提交' : '2FA PIN 设置请求已提交', resp.operation?.status);
     },
     onError: handleError,
   });
@@ -38,7 +43,7 @@ export function WaAccountSecurityPanel({ account, onDone, onError }: Props) {
       setEmailOtpVisible(shouldShowEmailOtp(status));
       if (status === AccountSettingsOperationStatus.ACCOUNT_SETTINGS_OPERATION_STATUS_VERIFIED) setEmailOtp('');
       void twoFactorStatus.refetch();
-      handleSuccess('账户邮箱设置请求已提交', status);
+      handleSuccess(emailConfigured ? '账户邮箱修改请求已提交' : '账户邮箱设置请求已提交', status);
     },
     onError: handleError,
   });
@@ -64,21 +69,37 @@ export function WaAccountSecurityPanel({ account, onDone, onError }: Props) {
   const busy = twoFactor.isPending || emailSet.isPending || otpRequest.isPending || otpVerify.isPending;
   const handleEmailChange = (value: string) => { setEmail(value); setEmailOtp(''); setEmailOtpVisible(false); };
   return (
-    <section className="grid gap-5">
-      <div className="flex items-center justify-end"><Badge variant="outline">{statusLabel(lastStatus)}</Badge></div>
-      <div className="grid gap-6 lg:grid-cols-2">
+    <section className="grid gap-4">
+      {lastStatus !== undefined ? <div className="flex items-center justify-end"><Badge variant="outline">{statusLabel(lastStatus)}</Badge></div> : null}
+      <div className="grid gap-4 lg:grid-cols-2">
         <form className="grid gap-3" onSubmit={(event) => submit(event, twoFactor.mutate)}>
           <div className="inline-flex items-center gap-2 text-sm font-medium">
-            <ShieldCheck size={15} />设置 2FA PIN
+            <ShieldCheck size={15} />{pinAction}
             <Badge variant={twoFactorBadgeVariant(twoFactorStatus)}>{twoFactorStatusLabel(twoFactorStatus)}</Badge>
           </div>
-          <FieldGroup><Field><FieldLabel>6 位 PIN</FieldLabel><Input value={pin} onChange={(event) => setPin(event.target.value)} inputMode="numeric" autoComplete="one-time-code" type="password" maxLength={6} disabled={busy} /></Field><Button type="submit" disabled={busy || pin.length !== 6}><KeyRound size={14} />提交 PIN</Button></FieldGroup>
+          <FieldGroup>
+            <Field>
+              <FieldLabel>{pinConfigured ? '新 6 位 PIN' : '6 位 PIN'}</FieldLabel>
+              <Input value={pin} onChange={(event) => setPin(event.target.value)} inputMode="numeric" autoComplete="one-time-code" type="password" maxLength={6} disabled={busy} />
+            </Field>
+            <Button type="submit" disabled={busy || pin.length !== 6} title={pinAction}>
+              <KeyRound size={14} />{pinConfigured ? '修改 PIN' : '设置 PIN'}
+            </Button>
+          </FieldGroup>
         </form>
         <form className="grid gap-3" onSubmit={(event) => submit(event, emailSet.mutate)}>
-          <div className="inline-flex items-center gap-2 text-sm font-medium"><Mail size={15} />设置账户邮箱</div>
+          <div className="inline-flex items-center gap-2 text-sm font-medium">
+            <Mail size={15} />{emailAction}
+            <Badge variant={emailBadgeVariant(twoFactorStatus)}>{emailStatusLabel(twoFactorStatus)}</Badge>
+          </div>
           <FieldGroup>
-            <Field><FieldLabel>邮箱地址</FieldLabel><Input value={email} onChange={(event) => handleEmailChange(event.target.value)} type="email" disabled={busy} /></Field>
-            <Button type="submit" disabled={busy || !email}><Mail size={14} />提交邮箱</Button>
+            <Field>
+              <FieldLabel>{emailConfigured ? '新邮箱地址' : '邮箱地址'}</FieldLabel>
+              <Input value={email} onChange={(event) => handleEmailChange(event.target.value)} type="email" disabled={busy} placeholder={emailConfigured ? '新邮箱地址' : '邮箱地址'} />
+            </Field>
+            <Button type="submit" disabled={busy || !email} title={emailAction}>
+              <Mail size={14} />{emailConfigured ? '修改邮箱' : '设置邮箱'}
+            </Button>
           </FieldGroup>
         </form>
         {emailOtpVisible && (
@@ -104,15 +125,34 @@ function shouldShowEmailOtp(status?: AccountSettingsOperationStatus) {
     || status === AccountSettingsOperationStatus.ACCOUNT_SETTINGS_OPERATION_STATUS_CODE_MISMATCH;
 }
 
-function twoFactorStatusLabel(query: { isPending: boolean; isError: boolean; data?: { status?: { configured?: boolean } } }) {
+function twoFactorStatusLabel(query: TwoFactorStatusView) {
   if (query.isPending) return '读取中';
   if (query.isError) return '读取失败';
   return query.data?.status?.configured ? '已配置' : '未配置';
 }
 
-function twoFactorBadgeVariant(query: { isPending: boolean; isError: boolean; data?: { status?: { configured?: boolean } } }): BadgeVariant {
+function emailStatusLabel(query: TwoFactorStatusView) {
+  if (query.isPending) return '读取中';
+  if (query.isError) return '读取失败';
+  return query.data?.status?.email_configured ? '已配置' : '未配置';
+}
+
+function twoFactorBadgeVariant(query: TwoFactorStatusView): BadgeVariant {
   if (query.isError) return 'destructive';
   return query.data?.status?.configured ? 'default' : 'outline';
+}
+
+function emailBadgeVariant(query: TwoFactorStatusView): BadgeVariant {
+  if (query.isError) return 'destructive';
+  return query.data?.status?.email_configured ? 'default' : 'outline';
+}
+
+function twoFactorConfigured(query: TwoFactorStatusView) {
+  return Boolean(query.data?.status?.configured);
+}
+
+function twoFactorEmailConfigured(query: TwoFactorStatusView) {
+  return Boolean(query.data?.status?.email_configured);
 }
 
 function statusLabel(status?: AccountSettingsOperationStatus) {

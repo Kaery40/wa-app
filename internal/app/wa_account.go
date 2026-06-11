@@ -11,10 +11,11 @@ import (
 
 var waAccountIDPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9:_-]{0,127}$`)
 
-func newWAAccount(id string, phone *waappv1.PhoneTarget, status waappv1.WAAccountStatus, audit *waappv1.AuditStamp) *waappv1.WAAccount {
+func newWAAccount(id string, displayName string, phone *waappv1.PhoneTarget, status waappv1.WAAccountStatus, audit *waappv1.AuditStamp) *waappv1.WAAccount {
 	phone = normalizePhone(phone)
 	return &waappv1.WAAccount{
 		WaAccountId: strings.TrimSpace(id),
+		DisplayName: strings.TrimSpace(displayName),
 		Phone:       phone,
 		Status:      normalizeWAAccountStatus(status),
 		Audit:       audit,
@@ -26,7 +27,15 @@ func withWAAccountStatus(account *waappv1.WAAccount, status waappv1.WAAccountSta
 	if createdAt.IsZero() {
 		createdAt = updatedAt
 	}
-	return newWAAccount(waAccountID(account), account.GetPhone(), status, audit(createdAt, updatedAt))
+	return newWAAccount(waAccountID(account), account.GetDisplayName(), account.GetPhone(), status, audit(createdAt, updatedAt))
+}
+
+func withWAAccountDisplayName(account *waappv1.WAAccount, displayName string, updatedAt time.Time) *waappv1.WAAccount {
+	createdAt := waAccountCreatedAt(account)
+	if createdAt.IsZero() {
+		createdAt = updatedAt
+	}
+	return newWAAccount(waAccountID(account), displayName, account.GetPhone(), waAccountStatus(account), audit(createdAt, updatedAt))
 }
 
 func waAccountID(account *waappv1.WAAccount) string {

@@ -25,6 +25,7 @@ const (
 	waAppStateHashBytes          = 128
 	waAppStateMACBytes           = 32
 	waAppStateIntegrityInfo      = "WhatsApp Patch Integrity"
+	waAppStateKeyUnavailable     = "WA app-state key is not available; reconnect the account before changing profile name"
 )
 
 func buildNativePushNamePatch(state *nativeState, displayName string, timestampMS uint64) (chatdNode, nativeAppStateCollection, error) {
@@ -93,7 +94,7 @@ func buildNativeAppStatePatchIQ(id string, collectionName string, version uint64
 
 func selectedNativeAppStateKey(state *nativeState) ([]byte, []byte, error) {
 	if state == nil || len(state.AppState.Keys) == 0 {
-		return nil, nil, appStatePatchError("WA app-state key is not available; reconnect the account before changing profile name")
+		return nil, nil, appStatePatchError(waAppStateKeyUnavailable)
 	}
 	keys := make([]nativeAppStateKey, 0, len(state.AppState.Keys))
 	for _, key := range state.AppState.Keys {
@@ -103,7 +104,7 @@ func selectedNativeAppStateKey(state *nativeState) ([]byte, []byte, error) {
 		}
 	}
 	if len(keys) == 0 {
-		return nil, nil, appStatePatchError("WA app-state key is not available; reconnect the account before changing profile name")
+		return nil, nil, appStatePatchError(waAppStateKeyUnavailable)
 	}
 	slices.SortFunc(keys, func(left nativeAppStateKey, right nativeAppStateKey) int {
 		if left.Timestamp != right.Timestamp {

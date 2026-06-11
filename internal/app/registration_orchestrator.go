@@ -33,10 +33,22 @@ func (s *Server) StartRegistration(ctx context.Context, payload map[string]any) 
 	if err != nil {
 		return nil, err
 	}
+	defer runner.CloseIdleConnections()
+	defer func() {
+		_ = gateway.server.runtime.DeleteTransientState(context.Background(), fingerprintRef)
+	}()
+	routeSaved := false
+	defer func() {
+		if managedRoute && !routeSaved {
+			gateway.releaseProxyRoute(context.Background(), route)
+		}
+	}()
 	phone := normalizePhone(phoneFromAction(basePayload))
+	probeResult := runner.probeAccountWithState(ctx, EngineRegistrationInput{Phone: phone, DeliveryMethod: waappv1.VerificationDeliveryMethod_VERIFICATION_DELIVERY_METHOD_SMS}, state)
+	if !registrationProbeAllowsSMS(probeResult) {
+		return rejectedRegistrationResult(basePayload, registrationProbeFailureMap(probeResult, route, managedRoute)), nil
+	}
 	codeResult, updatedState := runner.requestVerificationCodeWithState(ctx, EngineRegistrationInput{Phone: phone, DeliveryMethod: waappv1.VerificationDeliveryMethod_VERIFICATION_DELIVERY_METHOD_SMS}, state)
-	runner.CloseIdleConnections()
-	_ = gateway.server.runtime.DeleteTransientState(context.Background(), fingerprintRef)
 	if !verificationCodeRequestAccepted(codeResult) {
 		return rejectedRegistrationResult(basePayload, registrationRequestFailureMap(codeResult, route, managedRoute)), nil
 	}
@@ -55,6 +67,7 @@ func (s *Server) StartRegistration(ctx context.Context, payload map[string]any) 
 			_ = gateway.discardRejectedRegistration(context.Background(), basePayload, waAccountID(account), verificationRequestID)
 			return nil, err
 		}
+		routeSaved = true
 	}
 	wait := registrationOTPWait{
 		WAAccountID:           waAccountID(account),
@@ -106,7 +119,11 @@ func registrationPhase(success bool, verificationRequestID string, retryAfter ti
 }
 
 func verificationCodeRequestAccepted(result EngineCodeResult) bool {
-	return result.Err == nil && (result.Status == waappv1.VerificationRequestStatus_VERIFICATION_REQUEST_STATUS_SENT || result.Status == waappv1.VerificationRequestStatus_VERIFICATION_REQUEST_STATUS_WAITING)
+	return result.Err == nil && result.Status == waappv1.VerificationRequestStatus_VERIFICATION_REQUEST_STATUS_SENT
+}
+
+func registrationProbeAllowsSMS(result EngineProbeResult) bool {
+	return result.Err == nil && result.Status == waappv1.AccountProbeStatus_ACCOUNT_PROBE_STATUS_REACHABLE && result.CanSendSMS
 }
 
 func registrationRequestFailureMap(result EngineCodeResult, route DynamicProxyRoute, managedRoute bool) map[string]any {
@@ -120,8 +137,63 @@ func registrationRequestFailureMap(result EngineCodeResult, route DynamicProxyRo
 	}
 	if seconds := int64(result.RetryAfter / time.Second); seconds > 0 {
 		response["retry_after_seconds"] = seconds
+		response["registration_phase"] = "OTP_COOLDOWN"
 	}
 	return response
+}
+
+func registrationProbeFailureMap(result EngineProbeResult, route DynamicProxyRoute, managedRoute bool) map[string]any {
+	err := result.Err
+	if err == nil {
+		err = registrationProbeError(result)
+	}
+	protoErr := ToProtoError(err)
+	response := map[string]any{
+		"success":       false,
+		"status":        firstNonEmpty(result.Status.String(), "ACCOUNT_PROBE_STATUS_UNREACHABLE"),
+		"error":         protoMap(protoErr),
+		"error_message": protoErr.GetMessage(),
+		"proxy":         registrationProxyRouteMap(route, managedRoute),
+		"phone_status": map[string]any{
+			"account_status":     result.Status.String(),
+			"account_flow":       result.AccountFlow,
+			"account_raw_status": result.RawStatus,
+			"account_raw_reason": result.RawReason,
+			"blocked":            result.Blocked,
+			"registered":         result.Registered,
+			"sms_available":      result.CanSendSMS,
+			"sms_status":         registrationProbeSMSStatus(result),
+			"sms_wait_seconds":   result.SMSWaitSeconds,
+		},
+	}
+	if result.SMSWaitSeconds > 0 {
+		response["retry_after_seconds"] = result.SMSWaitSeconds
+		response["registration_phase"] = "OTP_COOLDOWN"
+	}
+	return response
+}
+
+func registrationProbeError(result EngineProbeResult) error {
+	switch {
+	case result.SMSWaitSeconds > 0 || result.AccountFlow == accountProbeFlowRateLimited:
+		return NewError(waappv1.WaErrorCode_WA_ERROR_CODE_RATE_LIMITED, "verification request is cooling down", true)
+	case result.Blocked:
+		return NewError(waappv1.WaErrorCode_WA_ERROR_CODE_REJECTED, "number is blocked", false)
+	case result.Status != waappv1.AccountProbeStatus_ACCOUNT_PROBE_STATUS_REACHABLE:
+		return NewError(waappv1.WaErrorCode_WA_ERROR_CODE_REJECTED, "account probe is not reachable", false)
+	default:
+		return NewError(waappv1.WaErrorCode_WA_ERROR_CODE_ROUTE_UNAVAILABLE, "SMS route unavailable", true)
+	}
+}
+
+func registrationProbeSMSStatus(result EngineProbeResult) string {
+	if result.CanSendSMS {
+		return "AVAILABLE"
+	}
+	if result.SMSWaitSeconds > 0 {
+		return "COOLDOWN"
+	}
+	return "UNAVAILABLE"
 }
 
 func (g *actionGateway) discardRejectedRegistration(ctx context.Context, basePayload map[string]any, waAccountID string, verificationRequestID string) error {
@@ -146,22 +218,30 @@ func (g *actionGateway) discardRejectedRegistration(ctx context.Context, basePay
 
 func rejectedRegistrationResult(basePayload map[string]any, requested map[string]any) map[string]any {
 	errorMessage := firstNonEmpty(textField(requested, "error_message"), textField(objectField(requested, "error"), "message"), "WA registration request was rejected")
-	return map[string]any{
+	response := map[string]any{
 		"success":                 false,
 		"status":                  firstNonEmpty(textField(requested, "status"), "OTP_REQUEST_REJECTED"),
 		"error":                   objectField(requested, "error"),
 		"error_message":           errorMessage,
 		"reject_reason":           registrationRejectReason(errorMessage),
 		"phone":                   objectField(basePayload, "phone"),
-		"registration_phase":      "OTP_REQUEST_REJECTED",
+		"registration_phase":      firstNonEmpty(textField(requested, "registration_phase"), "OTP_REQUEST_REJECTED"),
 		"fingerprint_persistence": "DISCARDED",
 		"persisted":               false,
+		"phone_status":            objectField(requested, "phone_status"),
 		"proxy":                   registrationOrchestratorProxySummary(objectField(requested, "proxy")),
 	}
+	if seconds := numberField(requested, "retry_after_seconds"); seconds > 0 {
+		response["retry_after_seconds"] = seconds
+	}
+	return response
 }
 
 func registrationRejectReason(errorMessage string) string {
 	normalized := strings.ToLower(errorMessage)
+	if strings.Contains(normalized, "too_recent") || strings.Contains(normalized, "too_many") || strings.Contains(normalized, "temporarily_unavailable") || strings.Contains(normalized, "cooldown") || strings.Contains(normalized, "cooling down") {
+		return "rate_limited"
+	}
 	if strings.Contains(normalized, "no_routes") {
 		return "no_routes"
 	}

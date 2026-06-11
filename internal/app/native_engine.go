@@ -147,7 +147,7 @@ func (e *NativeEngine) requestVerificationCodeWithState(ctx context.Context, inp
 	now := e.clock.Now()
 	if err != nil {
 		if verificationCodeRateLimited(data) {
-			return verificationCodeResult(waappv1.VerificationRequestStatus_VERIFICATION_REQUEST_STATUS_WAITING, data, now, retryAfter), state
+			return verificationCodeRejectedResult(data, now, retryAfter, "verification request is cooling down"), state
 		}
 		return EngineCodeResult{Status: waappv1.VerificationRequestStatus_VERIFICATION_REQUEST_STATUS_REJECTED, Err: classifyHTTPError(data, err)}, state
 	}
@@ -156,7 +156,7 @@ func (e *NativeEngine) requestVerificationCodeWithState(ctx context.Context, inp
 	if s == "sent" || s == "ok" {
 		status = waappv1.VerificationRequestStatus_VERIFICATION_REQUEST_STATUS_SENT
 	} else if verificationCodeRateLimited(data) {
-		status = waappv1.VerificationRequestStatus_VERIFICATION_REQUEST_STATUS_WAITING
+		return verificationCodeRejectedResult(data, now, retryAfter, "verification request is cooling down"), state
 	} else if s != "" {
 		return EngineCodeResult{Status: waappv1.VerificationRequestStatus_VERIFICATION_REQUEST_STATUS_REJECTED, Err: waProtocolError(data, "verification request was rejected")}, state
 	}
@@ -706,6 +706,16 @@ func verificationCodeResult(status waappv1.VerificationRequestStatus, data map[s
 		ExpectedCodeLength: int32(jsonNumber(data["length"])),
 		ExpiresAt:          now.Add(10 * time.Minute),
 		RetryAfter:         retryAfter,
+	}
+}
+
+func verificationCodeRejectedResult(data map[string]any, now time.Time, retryAfter time.Duration, fallback string) EngineCodeResult {
+	return EngineCodeResult{
+		Status:             waappv1.VerificationRequestStatus_VERIFICATION_REQUEST_STATUS_REJECTED,
+		ExpectedCodeLength: int32(jsonNumber(data["length"])),
+		ExpiresAt:          now.Add(10 * time.Minute),
+		RetryAfter:         retryAfter,
+		Err:                waProtocolError(data, fallback),
 	}
 }
 

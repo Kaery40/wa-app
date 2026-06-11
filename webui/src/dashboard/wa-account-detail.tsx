@@ -6,7 +6,7 @@ import { submitWaRegistrationOTP, waAccountID } from './wa-api';
 import { WaAccountProfileSettings } from './wa-account-profile-settings';
 import { WaAccountSecurityPanel } from './wa-account-security';
 import { WaDeviceFingerprintPanel } from './wa-device-fingerprint';
-import { Badge, Button, Input, Item, ItemContent, ItemDescription, ItemGroup, ItemTitle, Tabs, TabsContent, TabsList, TabsTrigger } from './ui';
+import { Badge, Button, Input } from './ui';
 
 type Props = { account: WAAccount; profiles: ClientProfile[]; profilesLoading: boolean; busy: boolean; onDone: (message: string) => void; onError: (message: string) => void; onAvatarChanged: () => void };
 
@@ -21,16 +21,8 @@ export function WaAccountDetail({ account, profiles, profilesLoading, busy, onDo
         {isRegistrationPending(account) && <ManualOtpSubmit account={account} busy={busy} onDone={onDone} onError={onError} />}
         <InfoSection icon={<UserRound size={16} />} title="资料"><WaAccountProfileSettings account={account} onDone={onDone} onError={onError} onAvatarChanged={onAvatarChanged} /></InfoSection>
         <InfoSection title="基础信息"><InfoGrid account={account} /></InfoSection>
-        <section className="p-5">
-          <Tabs defaultValue="security" className="gap-4">
-            <TabsList variant="line" className="w-full justify-start border-b border-border pb-2">
-              <TabsTrigger value="security"><Shield size={15} />安全</TabsTrigger>
-              <TabsTrigger value="fingerprint"><Fingerprint size={15} />设备指纹</TabsTrigger>
-            </TabsList>
-            <TabsContent value="security" className="mt-0"><WaAccountSecurityPanel account={account} onDone={onDone} onError={onError} /></TabsContent>
-            <TabsContent value="fingerprint" className="mt-0"><WaDeviceFingerprintPanel profiles={profiles} loading={profilesLoading} /></TabsContent>
-          </Tabs>
-        </section>
+        <InfoSection icon={<Shield size={16} />} title="安全"><WaAccountSecurityPanel account={account} onDone={onDone} onError={onError} /></InfoSection>
+        <InfoSection icon={<Fingerprint size={16} />} title="设备指纹"><WaDeviceFingerprintPanel profiles={profiles} loading={profilesLoading} /></InfoSection>
       </div>
     </section>
   );
@@ -67,11 +59,11 @@ function InfoGrid({ account }: { account: WAAccount }) {
     ['拨号码', account.phone?.country_calling_code || '-'],
     ['更新时间', formatTime(account.audit?.updated_at)],
   ];
-  return <ItemGroup className="grid gap-2 sm:grid-cols-2">{rows.map(([label, value]) => <InfoItem key={label} label={label} value={value} />)}</ItemGroup>;
+  return <dl className="grid gap-2 sm:grid-cols-2">{rows.map(([label, value]) => <InfoRow key={label} label={label} value={value} />)}</dl>;
 }
 
-function InfoItem({ label, value }: { label: string; value: string }) {
-  return <Item variant="muted" size="sm" className="min-w-0"><ItemContent className="min-w-0"><ItemTitle className="text-xs text-muted-foreground">{label}</ItemTitle><ItemDescription className="truncate font-mono text-xs text-foreground">{value}</ItemDescription></ItemContent></Item>;
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return <div className="min-w-0 rounded-lg bg-muted/50 px-3 py-2"><dt className="text-xs text-muted-foreground">{label}</dt><dd className="mt-1 truncate font-mono text-xs">{value}</dd></div>;
 }
 
 function formatTime(value?: string) {
